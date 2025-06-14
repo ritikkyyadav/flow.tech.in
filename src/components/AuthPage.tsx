@@ -96,7 +96,7 @@ export const AuthPage = () => {
               <CircleDollarSign className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">FinanceFlow</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Withu</h1>
           <p className="text-gray-600">AI-Powered Finance Management</p>
         </div>
 

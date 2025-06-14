@@ -52,7 +52,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
             {!isSidebarCollapsed && (
               <div>
-                <h1 className="text-xl font-bold">FinanceFlow</h1>
+                <h1 className="text-xl font-bold">Withu</h1>
                 <p className="text-gray-400 text-sm">AI-Powered Finance</p>
               </div>
             )}
