@@ -5,7 +5,7 @@ import { InteractivePieChart } from "@/components/dashboard/InteractivePieChart"
 import { WaterfallChart } from "@/components/dashboard/WaterfallChart";
 import { BudgetDashboard } from "@/components/dashboard/BudgetDashboard";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
-import { RecentTransactions } from "@/components/RecentTransactions";
+import { TransactionList } from "@/components/TransactionList";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -196,27 +196,11 @@ const Dashboard = () => {
               <BudgetDashboard categoryData={dashboardData.categoryData} />
             </div>
 
-            {/* Recent Activity */}
-            <Card className="bg-white border-0 shadow-sm">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-bold text-gray-900">
-                        Recent Transactions
-                      </CardTitle>
-                      <p className="text-sm text-gray-500">Your latest financial activity</p>
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <RecentTransactions refreshTrigger={refreshTrigger} />
-              </CardContent>
-            </Card>
+            {/* Transaction List */}
+            <TransactionList 
+              refreshTrigger={refreshTrigger} 
+              onRefresh={handleRefresh}
+            />
           </div>
         </div>
       </DashboardLayout>
