@@ -45,6 +45,7 @@ const Dashboard = () => {
     transactionType: 'all'
   });
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [showAIAssistant, setShowAIAssistant] = useState(false);
 
   useEffect(() => {
@@ -142,6 +143,7 @@ const Dashboard = () => {
   };
 
   const handleQuickAdd = () => {
+    setTransactionType('expense');
     setShowTransactionModal(true);
   };
 
@@ -150,7 +152,7 @@ const Dashboard = () => {
   };
 
   const handleTransactionSaved = () => {
-    fetchDashboardData(); // Refresh data after adding transaction
+    fetchDashboardData();
     setShowTransactionModal(false);
   };
 
@@ -289,7 +291,8 @@ const Dashboard = () => {
         <TransactionModal
           isOpen={showTransactionModal}
           onClose={() => setShowTransactionModal(false)}
-          onSaved={handleTransactionSaved}
+          type={transactionType}
+          onTransactionAdded={handleTransactionSaved}
         />
       )}
 
