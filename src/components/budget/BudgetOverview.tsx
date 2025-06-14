@@ -5,14 +5,28 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Target, DollarSign, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useBudgets } from '@/contexts/BudgetContext';
 import { useTransactions } from '@/contexts/TransactionContext';
 
-export const BudgetOverview = () => {
-  const { budgets, loading: budgetLoading } = useBudgets();
-  const { transactions, loading: transactionLoading } = useTransactions();
+interface Budget {
+  id: string;
+  user_id: string;
+  category: string;
+  amount: number;
+  period: string;
+  start_date: string;
+  end_date?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
-  const loading = budgetLoading || transactionLoading;
+interface BudgetOverviewProps {
+  budgets: Budget[];
+  loading: boolean;
+}
+
+export const BudgetOverview = ({ budgets, loading }: BudgetOverviewProps) => {
+  const { transactions, loading: transactionLoading } = useTransactions();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -24,7 +38,7 @@ export const BudgetOverview = () => {
   };
 
   const budgetData = useMemo(() => {
-    if (loading || !budgets || !transactions) return [];
+    if (!budgets || !transactions) return [];
 
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
@@ -64,7 +78,7 @@ export const BudgetOverview = () => {
         daysLeftInMonth
       };
     });
-  }, [budgets, transactions, loading]);
+  }, [budgets, transactions]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -82,7 +96,7 @@ export const BudgetOverview = () => {
     }
   };
 
-  if (loading) {
+  if (loading || transactionLoading) {
     return (
       <Card>
         <CardContent className="p-6">

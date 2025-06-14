@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, X } from 'lucide-react';
-import { useBudgets } from '@/contexts/BudgetContext';
 
 const COMMON_CATEGORIES = [
   'Food & Dining',
@@ -27,8 +26,25 @@ const COMMON_CATEGORIES = [
   'Other'
 ];
 
-export const BudgetSetupForm = () => {
-  const { createBudget, loading } = useBudgets();
+interface Budget {
+  id: string;
+  user_id: string;
+  category: string;
+  amount: number;
+  period: string;
+  start_date: string;
+  end_date?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface BudgetSetupFormProps {
+  onCreateBudget: (budget: Omit<Budget, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  loading: boolean;
+}
+
+export const BudgetSetupForm = ({ onCreateBudget, loading }: BudgetSetupFormProps) => {
   const [budgetItems, setBudgetItems] = useState([
     { category: '', amount: '', period: 'monthly' }
   ]);
@@ -54,7 +70,7 @@ export const BudgetSetupForm = () => {
     for (const item of budgetItems) {
       if (item.category && item.amount) {
         const startDate = new Date().toISOString().split('T')[0];
-        await createBudget({
+        await onCreateBudget({
           category: item.category,
           amount: parseFloat(item.amount),
           period: item.period,
