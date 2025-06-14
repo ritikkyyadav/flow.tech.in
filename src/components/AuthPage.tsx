@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,7 +87,7 @@ export const AuthPage = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email: formData.email,
       password: formData.password
     });
@@ -99,9 +98,15 @@ export const AuthPage = () => {
         description: error.message,
         variant: "destructive"
       });
-    } else if (rememberMe) {
-      // Set a longer session persistence
-      localStorage.setItem('withu_remember_me', 'true');
+    } else {
+      if (rememberMe) {
+        // Set remember me flag for extended session
+        localStorage.setItem('withu_remember_me', 'true');
+      }
+      toast({
+        title: "Welcome back!",
+        description: "You have been successfully signed in.",
+      });
     }
     setLoading(false);
   };
