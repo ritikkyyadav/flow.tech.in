@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -79,38 +78,41 @@ export const BusinessAnalytics = () => {
           break;
       }
 
-      // Fetch invoices with client data using raw SQL to handle type issues
+      // Fetch invoices with client data
       const { data: invoicesData, error: invoicesError } = await supabase
-        .rpc('get_invoices_with_clients', {
-          user_id: user.id,
-          start_date: startDate.toISOString()
-        })
-        .returns<Invoice[]>();
+        .from('invoices')
+        .select(`
+          *,
+          clients:client_id (
+            name
+          )
+        `)
+        .eq('user_id', user.id)
+        .gte('created_at', startDate.toISOString());
 
-      // If RPC doesn't exist, fallback to direct query
-      let invoices: Invoice[] = [];
       if (invoicesError) {
-        console.log('RPC not available, using direct query');
-        const { data: directInvoices, error: directError } = await supabase
-          .from('invoices')
-          .select(`
-            *,
-            clients:client_id (
-              name
-            )
-          `)
-          .eq('user_id', user.id)
-          .gte('created_at', startDate.toISOString()) as { data: Invoice[] | null; error: any };
-
-        if (directError) {
-          console.error('Error fetching invoices:', directError);
-          invoices = [];
-        } else {
-          invoices = directInvoices || [];
-        }
-      } else {
-        invoices = invoicesData || [];
+        console.error('Error fetching invoices:', invoicesError);
+        throw invoicesError;
       }
+
+      const invoices: Invoice[] = (invoicesData || []).map(invoice => ({
+        id: invoice.id,
+        user_id: invoice.user_id,
+        client_id: invoice.client_id,
+        invoice_number: invoice.invoice_number,
+        invoice_date: invoice.invoice_date,
+        due_date: invoice.due_date,
+        subtotal: Number(invoice.subtotal),
+        tax_amount: Number(invoice.tax_amount),
+        total: Number(invoice.total),
+        status: invoice.status,
+        currency: invoice.currency,
+        notes: invoice.notes,
+        payment_terms: invoice.payment_terms,
+        created_at: invoice.created_at,
+        updated_at: invoice.updated_at,
+        clients: invoice.clients
+      }));
 
       // Process monthly revenue data
       const monthlyData: Record<string, { month: string; revenue: number; invoices: number }> = {};

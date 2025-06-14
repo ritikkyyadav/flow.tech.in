@@ -50,8 +50,10 @@ export type Database = {
           address: string | null
           created_at: string
           email: string | null
+          gst_number: string | null
           id: string
           name: string
+          payment_terms: string | null
           phone: string | null
           user_id: string
         }
@@ -59,8 +61,10 @@ export type Database = {
           address?: string | null
           created_at?: string
           email?: string | null
+          gst_number?: string | null
           id?: string
           name: string
+          payment_terms?: string | null
           phone?: string | null
           user_id: string
         }
@@ -68,8 +72,10 @@ export type Database = {
           address?: string | null
           created_at?: string
           email?: string | null
+          gst_number?: string | null
           id?: string
           name?: string
+          payment_terms?: string | null
           phone?: string | null
           user_id?: string
         }

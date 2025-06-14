@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,11 +15,11 @@ import { useToast } from "@/hooks/use-toast";
 interface Client {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  gst_number?: string;
-  payment_terms: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  gst_number?: string | null;
+  payment_terms: string | null;
   created_at: string;
   total_invoiced?: number;
   outstanding_amount?: number;
@@ -71,7 +70,23 @@ export const ClientManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setClients(data || []);
+      
+      // Map the data to match our Client interface
+      const formattedClients: Client[] = (data || []).map(client => ({
+        id: client.id,
+        name: client.name,
+        email: client.email,
+        phone: client.phone,
+        address: client.address,
+        gst_number: client.gst_number,
+        payment_terms: client.payment_terms,
+        created_at: client.created_at,
+        total_invoiced: 0,
+        outstanding_amount: 0,
+        invoice_count: 0
+      }));
+      
+      setClients(formattedClients);
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast({
@@ -165,11 +180,11 @@ export const ClientManager = () => {
   const startEdit = (client: Client) => {
     setNewClient({
       name: client.name,
-      email: client.email,
-      phone: client.phone,
-      address: client.address,
+      email: client.email || '',
+      phone: client.phone || '',
+      address: client.address || '',
       gst_number: client.gst_number || '',
-      payment_terms: client.payment_terms
+      payment_terms: client.payment_terms || 'net_30'
     });
     setEditingClient(client);
     setIsAddingClient(true);
@@ -177,7 +192,7 @@ export const ClientManager = () => {
 
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (client.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -371,10 +386,12 @@ export const ClientManager = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600">{client.email}</span>
-                  </div>
+                  {client.email && (
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-600">{client.email}</span>
+                    </div>
+                  )}
                   {client.phone && (
                     <div className="flex items-center space-x-2 text-sm">
                       <Phone className="w-4 h-4 text-gray-400" />
