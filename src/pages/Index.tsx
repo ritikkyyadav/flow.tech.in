@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FinancialOverview } from "@/components/FinancialOverview";
@@ -10,6 +9,9 @@ import { TransactionModal } from "@/components/TransactionModal";
 import { TransactionAnalytics } from "@/components/TransactionAnalytics";
 import { InvoiceModal } from "@/components/InvoiceModal";
 import { AIChatAssistant } from "@/components/AIChatAssistant";
+import { FinancialInsights } from "@/components/FinancialInsights";
+import { CashFlowChart } from "@/components/CashFlowChart";
+import { BudgetPerformance } from "@/components/BudgetPerformance";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
@@ -62,11 +64,28 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
-            {/* Charts and Analytics */}
-            <FinancialCharts refreshTrigger={refreshTrigger} />
-            
-            {/* Recent Transactions */}
-            <RecentTransactions refreshTrigger={refreshTrigger} />
+            {/* Primary Analytics Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Cash Flow Analysis */}
+              <div className="lg:col-span-2">
+                <CashFlowChart refreshTrigger={refreshTrigger} />
+              </div>
+              
+              {/* Charts and Analytics */}
+              <FinancialCharts refreshTrigger={refreshTrigger} />
+            </div>
+
+            {/* Secondary Analytics Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Budget Performance */}
+              <BudgetPerformance refreshTrigger={refreshTrigger} />
+              
+              {/* AI Insights */}
+              <FinancialInsights refreshTrigger={refreshTrigger} />
+              
+              {/* Recent Transactions */}
+              <RecentTransactions refreshTrigger={refreshTrigger} />
+            </div>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
@@ -78,7 +97,10 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="insights" className="space-y-6">
-            <AIInsights />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <FinancialInsights refreshTrigger={refreshTrigger} />
+              <AIInsights />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
