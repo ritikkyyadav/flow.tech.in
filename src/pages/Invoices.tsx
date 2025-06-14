@@ -12,15 +12,19 @@ const Invoices = () => {
   const [showInvoiceBuilder, setShowInvoiceBuilder] = useState(false);
 
   const handleCreateInvoice = () => {
+    console.log("Create invoice button clicked");
     setShowInvoiceBuilder(true);
   };
 
   const handleInvoiceCreated = () => {
+    console.log("Invoice created, returning to list");
     setShowInvoiceModal(false);
+    setShowInvoiceBuilder(false);
     // Refresh invoice list if needed
   };
 
   const handleBackToList = () => {
+    console.log("Back to list clicked");
     setShowInvoiceBuilder(false);
   };
 
@@ -43,22 +47,32 @@ const Invoices = () => {
         title="Invoices" 
         activeTab="invoices"
         headerActions={
-          <div className="flex gap-2">
-            <Button 
-              size="sm" 
-              onClick={handleCreateInvoice}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Quick Add
-            </Button>
-          </div>
+          <Button 
+            onClick={handleCreateInvoice}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md shadow-sm"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Invoice
+          </Button>
         }
       >
         <div className="p-4 lg:p-6 space-y-6">
-          <div className="text-center mb-6">
-            <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
+          {/* Add a prominent create button at the top */}
+          <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Invoice Management</h2>
+              <p className="text-gray-600 text-sm">Create and manage your invoices</p>
+            </div>
+            <Button 
+              onClick={handleCreateInvoice}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-md shadow-sm"
+              size="lg"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              New Invoice
+            </Button>
           </div>
+
           <InvoiceList />
         </div>
       </ResponsiveLayout>
