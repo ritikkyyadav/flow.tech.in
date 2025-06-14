@@ -9,7 +9,11 @@ import {
   Target, 
   Calculator,
   Camera,
-  Mic
+  Mic,
+  Zap,
+  TrendingUp,
+  CreditCard,
+  PieChart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,63 +23,83 @@ interface QuickActionsPanelProps {
 }
 
 export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelProps) => {
-  const quickActions = [
+  const primaryActions = [
     {
       id: 'add-transaction',
       label: 'Add Transaction',
       icon: Plus,
-      color: 'bg-blue-500 hover:bg-blue-600',
-      primary: true
+      gradient: 'from-blue-500 to-blue-600',
+      description: 'Quick expense or income entry'
     },
     {
       id: 'generate-report',
       label: 'Generate Report',
-      icon: FileText,
-      color: 'bg-green-500 hover:bg-green-600',
-      primary: false
-    },
+      icon: BarChart3,
+      gradient: 'from-emerald-500 to-emerald-600',
+      description: 'Monthly financial summary'
+    }
+  ];
+
+  const secondaryActions = [
     {
       id: 'create-invoice',
       label: 'Create Invoice',
       icon: FileText,
-      color: 'bg-purple-500 hover:bg-purple-600',
-      primary: false
+      color: 'bg-purple-50 hover:bg-purple-100 border-purple-200',
+      iconColor: 'text-purple-600'
     },
     {
       id: 'set-budget',
       label: 'Set Budget',
       icon: Target,
-      color: 'bg-orange-500 hover:bg-orange-600',
-      primary: false
+      color: 'bg-orange-50 hover:bg-orange-100 border-orange-200',
+      iconColor: 'text-orange-600'
     },
     {
       id: 'export-data',
       label: 'Export Data',
       icon: Download,
-      color: 'bg-gray-500 hover:bg-gray-600',
-      primary: false
+      color: 'bg-gray-50 hover:bg-gray-100 border-gray-200',
+      iconColor: 'text-gray-600'
     },
     {
       id: 'calculator',
       label: 'Calculator',
       icon: Calculator,
-      color: 'bg-indigo-500 hover:bg-indigo-600',
-      primary: false
+      color: 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200',
+      iconColor: 'text-indigo-600'
     }
   ];
 
-  const contextualActions = [
+  const smartFeatures = [
     {
       id: 'scan-receipt',
       label: 'Scan Receipt',
       icon: Camera,
-      description: 'Add expense from receipt'
+      description: 'AI-powered expense capture'
     },
     {
       id: 'voice-entry',
       label: 'Voice Entry',
       icon: Mic,
-      description: 'Add transaction by voice'
+      description: 'Add transactions by voice'
+    }
+  ];
+
+  const insights = [
+    {
+      label: 'Spending Trend',
+      value: '+12%',
+      icon: TrendingUp,
+      color: 'text-red-600',
+      bg: 'bg-red-50'
+    },
+    {
+      label: 'Top Category',
+      value: 'Food & Dining',
+      icon: PieChart,
+      color: 'text-blue-600',
+      bg: 'bg-blue-50'
     }
   ];
 
@@ -84,20 +108,19 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
     
     switch (actionId) {
       case 'add-transaction':
-        // Would open transaction modal
         onRefresh();
         break;
       case 'generate-report':
-        // Would generate and download report
+        console.log('Generating report...');
         break;
       case 'create-invoice':
-        // Would open invoice builder
+        console.log('Opening invoice builder...');
         break;
       case 'set-budget':
-        // Would open budget settings
+        console.log('Opening budget settings...');
         break;
       case 'export-data':
-        // Would export data
+        console.log('Exporting data...');
         break;
       default:
         console.log(`Action ${actionId} not implemented yet`);
@@ -105,111 +128,141 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
   };
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-white flex items-center">
-          <Plus className="w-5 h-5 mr-2" />
+    <Card className={cn("shadow-lg border-0 bg-gradient-to-br from-gray-900 to-black text-white overflow-hidden", className)}>
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="20" height="20" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3Cpattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"%3E%3Cpath d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/%3E%3C/pattern%3E%3C/defs%3E%3Crect width="100%25" height="100%25" fill="url(%23grid)" /%3E%3C/svg%3E')] opacity-20" />
+      
+      <CardHeader className="relative z-10">
+        <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+            <Zap className="w-5 h-5" />
+          </div>
           Quick Actions
         </CardTitle>
+        <p className="text-gray-300 text-sm">Streamline your financial tasks</p>
       </CardHeader>
-      <CardContent>
+      
+      <CardContent className="space-y-6 relative z-10">
         {/* Primary Actions */}
-        <div className="space-y-3 mb-6">
-          {quickActions.filter(action => action.primary).map((action) => {
-            const IconComponent = action.icon;
-            return (
-              <Button
-                key={action.id}
-                onClick={() => handleActionClick(action.id)}
-                className={cn(
-                  "w-full flex items-center justify-center space-x-3 py-3 text-white font-medium",
-                  action.color
-                )}
-              >
-                <IconComponent className="w-5 h-5" />
-                <span>{action.label}</span>
-              </Button>
-            );
-          })}
-        </div>
-
-        {/* Secondary Actions Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {quickActions.filter(action => !action.primary).map((action) => {
-            const IconComponent = action.icon;
-            return (
-              <Button
-                key={action.id}
-                onClick={() => handleActionClick(action.id)}
-                variant="outline"
-                className={cn(
-                  "h-16 flex flex-col items-center justify-center space-y-1 text-white border-gray-600 hover:bg-gray-700",
-                  action.color.replace('bg-', 'hover:bg-').replace('hover:bg-', 'hover:bg-')
-                )}
-              >
-                <IconComponent className="w-5 h-5" />
-                <span className="text-xs">{action.label}</span>
-              </Button>
-            );
-          })}
-        </div>
-
-        {/* Contextual Actions */}
         <div className="space-y-3">
-          <div className="text-sm font-medium text-gray-300 mb-2">Smart Features</div>
-          {contextualActions.map((action) => {
+          {primaryActions.map((action) => {
             const IconComponent = action.icon;
             return (
               <Button
                 key={action.id}
                 onClick={() => handleActionClick(action.id)}
-                variant="ghost"
-                className="w-full flex items-center justify-start space-x-3 py-3 text-gray-300 hover:bg-gray-700 hover:text-white"
+                className={cn(
+                  "w-full h-16 flex items-center justify-start space-x-4 p-4 text-white font-semibold",
+                  "bg-gradient-to-r", action.gradient,
+                  "hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl",
+                  "border-0 rounded-xl"
+                )}
               >
-                <IconComponent className="w-4 h-4" />
-                <div className="text-left">
-                  <div className="font-medium">{action.label}</div>
-                  <div className="text-xs text-gray-400">{action.description}</div>
+                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                  <IconComponent className="w-5 h-5" />
+                </div>
+                <div className="text-left flex-1">
+                  <div className="font-bold">{action.label}</div>
+                  <div className="text-xs text-white/80">{action.description}</div>
                 </div>
               </Button>
             );
           })}
         </div>
 
-        {/* Recently Used */}
-        <div className="mt-6 pt-4 border-t border-gray-600">
-          <div className="text-sm font-medium text-gray-300 mb-2">Recently Used</div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs text-gray-300 border-gray-600 hover:bg-gray-700"
-            >
-              Add Expense
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs text-gray-300 border-gray-600 hover:bg-gray-700"
-            >
-              Set Budget
-            </Button>
+        {/* Secondary Actions Grid */}
+        <div>
+          <h4 className="text-sm font-semibold text-gray-300 mb-3">More Actions</h4>
+          <div className="grid grid-cols-2 gap-3">
+            {secondaryActions.map((action) => {
+              const IconComponent = action.icon;
+              return (
+                <Button
+                  key={action.id}
+                  onClick={() => handleActionClick(action.id)}
+                  variant="outline"
+                  className={cn(
+                    "h-20 flex flex-col items-center justify-center space-y-2 bg-white/10 border-white/20 text-white",
+                    "hover:bg-white/20 hover:scale-105 transition-all duration-200 rounded-xl backdrop-blur-sm"
+                  )}
+                >
+                  <IconComponent className="w-5 h-5" />
+                  <span className="text-xs font-medium text-center leading-tight">{action.label}</span>
+                </Button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Context Awareness */}
-        <div className="mt-4 p-3 bg-gray-700 rounded-lg">
-          <div className="text-xs text-gray-400 mb-1">Smart Suggestion</div>
-          <div className="text-sm text-gray-200">
-            Based on your spending pattern, consider setting a budget for dining out this month.
+        {/* Smart Features */}
+        <div>
+          <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            AI-Powered
+          </h4>
+          <div className="space-y-2">
+            {smartFeatures.map((feature) => {
+              const IconComponent = feature.icon;
+              return (
+                <Button
+                  key={feature.id}
+                  onClick={() => handleActionClick(feature.id)}
+                  variant="ghost"
+                  className="w-full flex items-center justify-start space-x-3 p-3 text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200 rounded-lg"
+                >
+                  <IconComponent className="w-4 h-4" />
+                  <div className="text-left">
+                    <div className="font-medium text-sm">{feature.label}</div>
+                    <div className="text-xs text-gray-400">{feature.description}</div>
+                  </div>
+                </Button>
+              );
+            })}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-2 text-xs text-gray-300 border-gray-600 hover:bg-gray-600"
-          >
-            Set Dining Budget
-          </Button>
+        </div>
+
+        {/* Quick Insights */}
+        <div className="pt-4 border-t border-white/10">
+          <h4 className="text-sm font-semibold text-gray-300 mb-3">Quick Insights</h4>
+          <div className="space-y-2">
+            {insights.map((insight, index) => {
+              const IconComponent = insight.icon;
+              return (
+                <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg backdrop-blur-sm">
+                  <div className="flex items-center space-x-3">
+                    <div className={cn("p-2 rounded-lg", insight.bg)}>
+                      <IconComponent className={cn("w-4 h-4", insight.color)} />
+                    </div>
+                    <span className="text-sm font-medium text-gray-300">{insight.label}</span>
+                  </div>
+                  <span className="text-sm font-bold text-white">{insight.value}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Smart Suggestion */}
+        <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-xl border border-blue-400/30 backdrop-blur-sm">
+          <div className="flex items-start space-x-3">
+            <div className="p-2 bg-blue-500/30 rounded-lg">
+              <Target className="w-4 h-4 text-blue-300" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-blue-200 mb-1">Smart Suggestion</div>
+              <div className="text-xs text-blue-100 mb-3">
+                You're spending 15% more on dining this month. Consider setting a budget limit.
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs bg-blue-500/20 border-blue-400/30 text-blue-200 hover:bg-blue-500/30 hover:text-white transition-colors"
+                onClick={() => handleActionClick('set-budget')}
+              >
+                Set Dining Budget
+              </Button>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
