@@ -45,6 +45,7 @@ export const ResponsiveLayout = ({
     const path = location.pathname;
     if (path === '/dashboard') return 'dashboard';
     if (path === '/transactions') return 'transactions';
+    if (path === '/budget') return 'budget';
     if (path === '/invoices') return 'invoices';
     if (path === '/reports') return 'reports';
     if (path === '/settings') return 'settings';
@@ -64,6 +65,9 @@ export const ResponsiveLayout = ({
         break;
       case 'transactions':
         navigate('/transactions');
+        break;
+      case 'budget':
+        navigate('/budget');
         break;
       case 'invoices':
         navigate('/invoices');

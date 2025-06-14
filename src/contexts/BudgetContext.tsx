@@ -52,10 +52,12 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [alerts, setAlerts] = useState<BudgetAlert[]>([]);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const refreshBudgets = async () => {
-    if (!user) {
+    // Don't fetch if auth is still loading or user is not available
+    if (authLoading || !user) {
+      console.log('Skipping budget fetch - authLoading:', authLoading, 'user:', !!user);
       setBudgets([]);
       setAlerts([]);
       setLoading(false);
@@ -79,7 +81,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         throw budgetError;
       }
 
-      console.log('Fetched budgets:', budgetData);
+      console.log('Fetched budgets:', budgetData?.length || 0);
 
       // Fetch alerts
       const { data: alertData, error: alertError } = await supabase
@@ -90,7 +92,6 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (alertError) {
         console.error('Alert fetch error:', alertError);
-        // Don't throw error for alerts, just log it
         setAlerts([]);
       } else {
         setAlerts(alertData || []);
@@ -174,10 +175,15 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  // Only run effect when auth finishes loading and user state changes
   useEffect(() => {
-    console.log('BudgetProvider useEffect triggered, user:', user?.id);
-    refreshBudgets();
-  }, [user?.id]); // Only depend on user.id to prevent infinite loops
+    console.log('BudgetProvider useEffect triggered - authLoading:', authLoading, 'user:', user?.id);
+    
+    // Only fetch when auth is done loading
+    if (!authLoading) {
+      refreshBudgets();
+    }
+  }, [authLoading, user?.id]);
 
   return (
     <BudgetContext.Provider
