@@ -3,6 +3,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { 
   TrendingUp, 
   FileText, 
@@ -25,6 +26,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange }: DashboardLayoutProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const menuItems = [
     { id: "dashboard", icon: Home, label: "Dashboard", active: activeTab === "dashboard" },
@@ -38,6 +40,30 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
   const handleMenuClick = (itemId: string) => {
     if (onTabChange) {
       onTabChange(itemId);
+    }
+    
+    // Handle navigation for different tabs
+    switch (itemId) {
+      case 'dashboard':
+        navigate('/dashboard');
+        break;
+      case 'transactions':
+        navigate('/transactions');
+        break;
+      case 'invoices':
+        navigate('/invoices');
+        break;
+      case 'reports':
+        navigate('/reports');
+        break;
+      case 'profile':
+        navigate('/profile');
+        break;
+      case 'settings':
+        navigate('/settings');
+        break;
+      default:
+        break;
     }
   };
 

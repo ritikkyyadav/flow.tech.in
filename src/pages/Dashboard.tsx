@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
 import { FinancialOverviewCards } from "@/components/dashboard/FinancialOverviewCards";
 import { DualAxisChart } from "@/components/dashboard/DualAxisChart";
 import { WaterfallChart } from "@/components/dashboard/WaterfallChart";
@@ -137,9 +137,9 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <DashboardLayout activeTab="dashboard">
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <ResponsiveLayout title="Dashboard" activeTab="dashboard">
+        <div className="p-4 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
                 <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
@@ -148,19 +148,19 @@ const Dashboard = () => {
             ))}
           </div>
         </div>
-      </DashboardLayout>
+      </ResponsiveLayout>
     );
   }
 
   return (
-    <DashboardLayout activeTab="dashboard">
+    <ResponsiveLayout title="Dashboard" activeTab="dashboard">
       <div className="min-h-screen bg-gray-50">
         {/* Advanced Filtering */}
         <div className="bg-white border-b border-gray-200 p-4">
           <AdvancedFiltering onFilterChange={handleFilterChange} />
         </div>
 
-        <div className="p-6 space-y-8">
+        <div className="p-4 lg:p-6 space-y-6 lg:space-y-8">
           {/* Financial Overview Cards */}
           <FinancialOverviewCards 
             balance={dashboardData.balance}
@@ -171,7 +171,7 @@ const Dashboard = () => {
           />
 
           {/* Primary Analytics Section */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
             <DualAxisChart 
               data={dashboardData.monthlyTrends}
               className="bg-gray-50 rounded-lg border border-gray-200"
@@ -182,7 +182,7 @@ const Dashboard = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
             <InteractivePieChart 
               data={dashboardData.categoryData}
               className="bg-white rounded-lg border border-gray-200"
@@ -194,7 +194,7 @@ const Dashboard = () => {
           </div>
 
           {/* Secondary Analytics Section */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             <div className="xl:col-span-2">
               <RecentTransactionsPanel 
                 transactions={dashboardData.transactions}
@@ -214,7 +214,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </ResponsiveLayout>
   );
 };
 

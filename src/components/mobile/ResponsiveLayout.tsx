@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { BottomNavigation } from "./BottomNavigation";
 import { MobileHeader } from "./MobileHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface ResponsiveLayoutProps {
@@ -32,14 +33,42 @@ export const ResponsiveLayout = ({
   onNotifications,
   headerActions,
   className,
-  activeTab,
+  activeTab = "dashboard",
   onTabChange
 }: ResponsiveLayoutProps) => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+
+  const handleTabChange = (tab: string) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+    
+    // Handle navigation for different tabs
+    switch (tab) {
+      case 'dashboard':
+        navigate('/dashboard');
+        break;
+      case 'transactions':
+        navigate('/transactions');
+        break;
+      case 'invoices':
+        navigate('/invoices');
+        break;
+      case 'reports':
+        navigate('/reports');
+        break;
+      case 'profile':
+        navigate('/profile');
+        break;
+      default:
+        break;
+    }
+  };
 
   if (!isMobile) {
     return (
-      <DashboardLayout activeTab={activeTab} onTabChange={onTabChange}>
+      <DashboardLayout activeTab={activeTab} onTabChange={handleTabChange}>
         {children}
       </DashboardLayout>
     );
@@ -65,7 +94,7 @@ export const ResponsiveLayout = ({
         {children}
       </main>
       
-      <BottomNavigation activeTab={activeTab} onTabChange={onTabChange} />
+      <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} />
     </div>
   );
 };
