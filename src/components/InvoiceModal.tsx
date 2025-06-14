@@ -13,9 +13,10 @@ import { useAuth } from "@/hooks/useAuth";
 interface InvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onInvoiceCreated?: () => void;
 }
 
-export const InvoiceModal = ({ isOpen, onClose }: InvoiceModalProps) => {
+export const InvoiceModal = ({ isOpen, onClose, onInvoiceCreated }: InvoiceModalProps) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     clientName: '',
@@ -132,6 +133,9 @@ export const InvoiceModal = ({ isOpen, onClose }: InvoiceModalProps) => {
         template: 'modern'
       });
 
+      if (onInvoiceCreated) {
+        onInvoiceCreated();
+      }
       onClose();
     } catch (error) {
       console.error('Error creating invoice:', error);

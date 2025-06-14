@@ -30,15 +30,16 @@ interface Transaction {
 
 interface RecentTransactionsProps {
   refreshTrigger: number;
+  filterType?: 'income' | 'expense' | 'all';
 }
 
-export const RecentTransactions = ({ refreshTrigger }: RecentTransactionsProps) => {
+export const RecentTransactions = ({ refreshTrigger, filterType = 'all' }: RecentTransactionsProps) => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState(filterType);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
@@ -49,6 +50,10 @@ export const RecentTransactions = ({ refreshTrigger }: RecentTransactionsProps) 
       fetchCategories();
     }
   }, [user, refreshTrigger]);
+
+  useEffect(() => {
+    setTypeFilter(filterType);
+  }, [filterType]);
 
   const fetchTransactions = async () => {
     if (!user) return;
