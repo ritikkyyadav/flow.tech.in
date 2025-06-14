@@ -3,11 +3,10 @@ import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
 import { FinancialOverviewCards } from "@/components/dashboard/FinancialOverviewCards";
 import { RecentTransactionsPanel } from "@/components/dashboard/RecentTransactionsPanel";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
-import { AIInsightsWidget } from "@/components/dashboard/AIInsightsWidget";
-import { InteractivePieChart } from "@/components/dashboard/InteractivePieChart";
-import { DualAxisChart } from "@/components/dashboard/DualAxisChart";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 
 const Dashboard = () => {
   const { transactions, loading } = useTransactions();
@@ -70,9 +69,10 @@ const Dashboard = () => {
   }, [transactions, loading]);
 
   const handleRefresh = () => {
-    // Refresh functionality can be implemented here
     console.log('Refreshing dashboard data...');
   };
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   if (loading) {
     return (
@@ -103,14 +103,85 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Charts */}
           <div className="lg:col-span-2 space-y-6">
-            <InteractivePieChart data={dashboardData.categoryData} />
-            <DualAxisChart data={dashboardData.chartData} />
+            
+            {/* Pie Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Expense Categories</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={dashboardData.categoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {dashboardData.categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Bar Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Income vs Expenses</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={dashboardData.chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="monthName" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="income" fill="#00C49F" name="Income" />
+                    <Bar dataKey="expenses" fill="#FF8042" name="Expenses" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Column - Actions and Insights */}
           <div className="space-y-6">
             <QuickActionsPanel onRefresh={handleRefresh} />
-            <AIInsightsWidget dashboardData={dashboardData} />
+            
+            {/* Simple AI Insights Widget */}
+            <Card>
+              <CardHeader>
+                <CardTitle>AI Insights</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium text-blue-900">Spending Analysis</h4>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Your current savings rate is {dashboardData.savingsRate.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <h4 className="font-medium text-green-900">Monthly Summary</h4>
+                    <p className="text-sm text-green-700 mt-1">
+                      Total income: ₹{dashboardData.monthlyIncome.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-green-700">
+                      Total expenses: ₹{dashboardData.monthlyExpenses.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
