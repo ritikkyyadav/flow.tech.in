@@ -15,10 +15,13 @@ const Dashboard = () => {
   const dashboardData = useMemo(() => {
     if (loading || !transactions) {
       return {
-        totalIncome: 0,
-        totalExpenses: 0,
-        netBalance: 0,
-        recentTransactions: []
+        balance: 0,
+        monthlyIncome: 0,
+        monthlyExpenses: 0,
+        savingsRate: 0,
+        recentTransactions: [],
+        categoryData: [],
+        chartData: []
       };
     }
 
@@ -30,13 +33,46 @@ const Dashboard = () => {
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
+    const balance = income - expenses;
+    const savingsRate = income > 0 ? ((balance / income) * 100) : 0;
+
+    // Create category data for pie chart
+    const categoryData = transactions
+      .filter(t => t.type === 'expense')
+      .reduce((acc: any[], transaction) => {
+        const existing = acc.find(item => item.name === transaction.category);
+        if (existing) {
+          existing.value += transaction.amount;
+        } else {
+          acc.push({
+            name: transaction.category,
+            value: transaction.amount,
+            type: 'expense'
+          });
+        }
+        return acc;
+      }, []);
+
+    // Create monthly chart data
+    const chartData = [
+      { monthName: 'Current', income, expenses, net: balance }
+    ];
+
     return {
-      totalIncome: income,
-      totalExpenses: expenses,
-      netBalance: income - expenses,
-      recentTransactions: transactions.slice(0, 5)
+      balance,
+      monthlyIncome: income,
+      monthlyExpenses: expenses,
+      savingsRate,
+      recentTransactions: transactions.slice(0, 5),
+      categoryData,
+      chartData
     };
   }, [transactions, loading]);
+
+  const handleRefresh = () => {
+    // Refresh functionality can be implemented here
+    console.log('Refreshing dashboard data...');
+  };
 
   if (loading) {
     return (
@@ -56,30 +92,32 @@ const Dashboard = () => {
       <div className="p-4 lg:p-6 space-y-6">
         {/* Financial Overview */}
         <FinancialOverviewCards 
-          totalIncome={dashboardData.totalIncome}
-          totalExpenses={dashboardData.totalExpenses}
-          netBalance={dashboardData.netBalance}
-          transactionCount={transactions?.length || 0}
+          balance={dashboardData.balance}
+          monthlyIncome={dashboardData.monthlyIncome}
+          monthlyExpenses={dashboardData.monthlyExpenses}
+          savingsRate={dashboardData.savingsRate}
+          onRefresh={handleRefresh}
         />
 
         {/* Main Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Charts */}
           <div className="lg:col-span-2 space-y-6">
-            <InteractivePieChart transactions={transactions || []} />
-            <DualAxisChart transactions={transactions || []} />
+            <InteractivePieChart data={dashboardData.categoryData} />
+            <DualAxisChart data={dashboardData.chartData} />
           </div>
 
           {/* Right Column - Actions and Insights */}
           <div className="space-y-6">
-            <QuickActionsPanel />
-            <AIInsightsWidget transactions={transactions || []} />
+            <QuickActionsPanel onRefresh={handleRefresh} />
+            <AIInsightsWidget dashboardData={dashboardData} />
           </div>
         </div>
 
         {/* Recent Transactions */}
         <RecentTransactionsPanel 
           transactions={dashboardData.recentTransactions}
+          onRefresh={handleRefresh}
         />
       </div>
     </ResponsiveLayout>
