@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,8 +86,8 @@ export const FinancialInsights = ({ refreshTrigger }: FinancialInsightsProps) =>
     const currentExpenses = current.filter(t => t.type === 'expense');
     const lastMonthExpenses = lastMonth.filter(t => t.type === 'expense');
 
-    const currentTotal = currentExpenses.reduce((sum, t) => sum + Number(t.amount), 0);
-    const lastMonthTotal = lastMonthExpenses.reduce((sum, t) => sum + Number(t.amount), 0);
+    const currentTotal = currentExpenses.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const lastMonthTotal = lastMonthExpenses.reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
     if (lastMonthTotal > 0) {
       const change = ((currentTotal - lastMonthTotal) / lastMonthTotal) * 100;
@@ -107,14 +106,15 @@ export const FinancialInsights = ({ refreshTrigger }: FinancialInsightsProps) =>
 
     // Category analysis
     const categorySpending = currentExpenses.reduce((acc: any, t: any) => {
-      acc[t.category] = (acc[t.category] || 0) + Number(t.amount);
+      const amount = Number(t.amount || 0);
+      acc[t.category] = (acc[t.category] || 0) + amount;
       return acc;
     }, {});
 
     const topCategory = Object.entries(categorySpending)
-      .sort(([,a]: any, [,b]: any) => b - a)[0];
+      .sort(([,a]: any, [,b]: any) => Number(b) - Number(a))[0];
 
-    if (topCategory && topCategory[1] > 10000) {
+    if (topCategory && Number(topCategory[1]) > 10000) {
       insights.push({
         id: 'top-category',
         type: 'info',
@@ -130,29 +130,32 @@ export const FinancialInsights = ({ refreshTrigger }: FinancialInsightsProps) =>
 
   const checkUnusualExpenses = (transactions: any[], insights: Insight[]) => {
     const expenses = transactions.filter(t => t.type === 'expense');
-    const amounts = expenses.map(t => Number(t.amount));
+    const amounts = expenses.map(t => Number(t.amount || 0));
+    
+    if (amounts.length === 0) return;
+    
     const average = amounts.reduce((a, b) => a + b, 0) / amounts.length;
     const unusualThreshold = average * 3;
 
-    const unusualExpenses = expenses.filter(t => Number(t.amount) > unusualThreshold);
+    const unusualExpenses = expenses.filter(t => Number(t.amount || 0) > unusualThreshold);
     
     if (unusualExpenses.length > 0) {
-      const largest = unusualExpenses.sort((a, b) => Number(b.amount) - Number(a.amount))[0];
+      const largest = unusualExpenses.sort((a, b) => Number(b.amount || 0) - Number(a.amount || 0))[0];
       insights.push({
         id: 'unusual-expense',
         type: 'warning',
         title: 'Unusual large expense detected',
-        description: `₹${Number(largest.amount).toLocaleString()} spent on ${largest.category} - is this planned?`,
+        description: `₹${Number(largest.amount || 0).toLocaleString()} spent on ${largest.category} - is this planned?`,
         actionText: 'Review Transaction',
         actionType: 'review-transaction',
-        amount: Number(largest.amount)
+        amount: Number(largest.amount || 0)
       });
     }
   };
 
   const analyzeSavingsProgress = (transactions: any[], insights: Insight[]) => {
-    const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
-    const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
+    const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount || 0), 0);
     const savings = income - expenses;
     const savingsRate = income > 0 ? (savings / income) * 100 : 0;
 
@@ -188,7 +191,7 @@ export const FinancialInsights = ({ refreshTrigger }: FinancialInsightsProps) =>
     );
 
     if (possibleSubscriptions.length > 0) {
-      const total = possibleSubscriptions.reduce((sum, t) => sum + Number(t.amount), 0);
+      const total = possibleSubscriptions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
       insights.push({
         id: 'subscriptions',
         type: 'tip',
