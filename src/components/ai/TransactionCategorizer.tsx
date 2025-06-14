@@ -5,7 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, CheckCircle, AlertCircle, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Brain, CheckCircle, AlertCircle, ThumbsUp, ThumbsDown, Zap } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface CategorySuggestion {
@@ -21,13 +23,29 @@ interface UncategorizedTransaction {
   vendor_merchant: string;
   transaction_date: string;
   suggested_categories: CategorySuggestion[];
+  selected_category?: string;
+  is_selected: boolean;
 }
+
+const CATEGORIES = [
+  'Food & Dining',
+  'Transportation', 
+  'Shopping',
+  'Utilities',
+  'Healthcare',
+  'Entertainment',
+  'Groceries',
+  'Business',
+  'Investment',
+  'Miscellaneous'
+];
 
 export const TransactionCategorizer = () => {
   const { user } = useAuth();
   const [uncategorizedTransactions, setUncategorizedTransactions] = useState<UncategorizedTransaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -44,8 +62,8 @@ export const TransactionCategorizer = () => {
         .from('transactions')
         .select('*')
         .eq('user_id', user.id)
-        .eq('category', 'Uncategorized')
-        .limit(10);
+        .in('category', ['Uncategorized', 'Miscellaneous'])
+        .limit(15);
 
       if (error) throw error;
 
@@ -55,7 +73,8 @@ export const TransactionCategorizer = () => {
           const suggestions = await categorizeTransaction(transaction);
           return {
             ...transaction,
-            suggested_categories: suggestions
+            suggested_categories: suggestions,
+            is_selected: false
           };
         })
       );
@@ -97,7 +116,7 @@ export const TransactionCategorizer = () => {
     }
   };
 
-  const applyCategory = async (transactionId: string, category: string, isCorrection: boolean = false) => {
+  const applyCategory = async (transactionId: string, category: string) => {
     setProcessing(transactionId);
     try {
       const { error } = await supabase
@@ -106,17 +125,6 @@ export const TransactionCategorizer = () => {
         .eq('id', transactionId);
 
       if (error) throw error;
-
-      // Learn from user feedback
-      if (isCorrection) {
-        await supabase.functions.invoke('learn-categorization', {
-          body: {
-            transaction_id: transactionId,
-            correct_category: category,
-            user_id: user?.id
-          }
-        });
-      }
 
       setUncategorizedTransactions(prev => 
         prev.filter(t => t.id !== transactionId)
@@ -138,24 +146,34 @@ export const TransactionCategorizer = () => {
     }
   };
 
-  const provideFeedback = async (transactionId: string, categoryUsed: string, isHelpful: boolean) => {
-    try {
-      await supabase.functions.invoke('categorization-feedback', {
-        body: {
-          transaction_id: transactionId,
-          category_used: categoryUsed,
-          is_helpful: isHelpful,
-          user_id: user?.id
-        }
-      });
+  const handleBulkCategorization = async () => {
+    const selected = uncategorizedTransactions.filter(t => 
+      selectedTransactions.includes(t.id) && t.selected_category
+    );
 
-      toast({
-        title: "Feedback Recorded",
-        description: "Thank you for helping improve our AI",
-      });
-    } catch (error) {
-      console.error('Error providing feedback:', error);
+    for (const transaction of selected) {
+      await applyCategory(transaction.id, transaction.selected_category!);
     }
+
+    setSelectedTransactions([]);
+  };
+
+  const toggleTransactionSelection =  (transactionId: string) => {
+    setSelectedTransactions(prev => 
+      prev.includes(transactionId)
+        ? prev.filter(id => id !== transactionId)
+        : [...prev, transactionId]
+    );
+  };
+
+  const updateSelectedCategory = (transactionId: string, category: string) => {
+    setUncategorizedTransactions(prev => 
+      prev.map(t => 
+        t.id === transactionId 
+          ? { ...t, selected_category: category }
+          : t
+      )
+    );
   };
 
   const getConfidenceColor = (confidence: number) => {
@@ -193,11 +211,26 @@ export const TransactionCategorizer = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="w-5 h-5" />
-          AI Transaction Categorizer
-          <Badge variant="outline">{uncategorizedTransactions.length}</Badge>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="w-5 h-5" />
+            AI Transaction Categorizer
+            <Badge variant="outline">{uncategorizedTransactions.length}</Badge>
+          </CardTitle>
+          
+          {selectedTransactions.length > 0 && (
+            <Button 
+              onClick={handleBulkCategorization}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={!uncategorizedTransactions.some(t => 
+                selectedTransactions.includes(t.id) && t.selected_category
+              )}
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Apply to {selectedTransactions.length}
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {uncategorizedTransactions.length === 0 ? (
@@ -210,57 +243,72 @@ export const TransactionCategorizer = () => {
           <div className="space-y-4">
             {uncategorizedTransactions.map((transaction) => (
               <div key={transaction.id} className="border rounded-lg p-4 space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">{transaction.description || 'No description'}</h4>
-                    <p className="text-sm text-gray-600">
-                      {transaction.vendor_merchant} • ₹{transaction.amount.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(transaction.transaction_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <p className="text-sm font-medium">AI Suggestions:</p>
-                  {transaction.suggested_categories.map((suggestion, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                      <div className="flex items-center gap-3">
-                        <Badge className={getConfidenceColor(suggestion.confidence)}>
-                          {getConfidenceText(suggestion.confidence)} ({Math.round(suggestion.confidence * 100)}%)
-                        </Badge>
-                        <div>
-                          <p className="font-medium">{suggestion.category}</p>
-                          <p className="text-xs text-gray-600">{suggestion.reasoning}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => applyCategory(transaction.id, suggestion.category)}
-                          disabled={processing === transaction.id}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          Apply
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => provideFeedback(transaction.id, suggestion.category, true)}
-                        >
-                          <ThumbsUp className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => provideFeedback(transaction.id, suggestion.category, false)}
-                        >
-                          <ThumbsDown className="w-4 h-4" />
-                        </Button>
+                <div className="flex items-start gap-4">
+                  <Checkbox
+                    checked={selectedTransactions.includes(transaction.id)}
+                    onCheckedChange={() => toggleTransactionSelection(transaction.id)}
+                  />
+                  
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">{transaction.description || 'No description'}</h4>
+                        <p className="text-sm text-gray-600">
+                          {transaction.vendor_merchant} • ₹{transaction.amount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(transaction.transaction_date).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
-                  ))}
+
+                    <div className="space-y-3 mt-4">
+                      <p className="text-sm font-medium">AI Suggestions:</p>
+                      {transaction.suggested_categories.map((suggestion, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                          <div className="flex items-center gap-3">
+                            <Badge className={getConfidenceColor(suggestion.confidence)}>
+                              {getConfidenceText(suggestion.confidence)} ({Math.round(suggestion.confidence * 100)}%)
+                            </Badge>
+                            <div>
+                              <p className="font-medium">{suggestion.category}</p>
+                              <p className="text-xs text-gray-600">{suggestion.reasoning}</p>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => applyCategory(transaction.id, suggestion.category)}
+                            disabled={processing === transaction.id}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            Apply
+                          </Button>
+                        </div>
+                      ))}
+                      
+                      {/* Manual Override */}
+                      <div className="mt-3 pt-3 border-t">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium">Manual Override:</label>
+                          <Select
+                            value={transaction.selected_category || ''}
+                            onValueChange={(value) => updateSelectedCategory(transaction.id, value)}
+                          >
+                            <SelectTrigger className="w-48">
+                              <SelectValue placeholder="Choose category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {CATEGORIES.map((category) => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

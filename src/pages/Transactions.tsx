@@ -2,6 +2,8 @@
 import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
 import { TransactionManager } from "@/components/TransactionManager";
 import { TransactionList } from "@/components/TransactionList";
+import { SmartCategorizer } from "@/components/ai/SmartCategorizer";
+import { CategoryLearning } from "@/components/ai/CategoryLearning";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -43,9 +45,11 @@ const Transactions = () => {
       >
         <div className="p-4 lg:p-6 space-y-6">
           <Tabs defaultValue="manager" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="manager">Add Transaction</TabsTrigger>
               <TabsTrigger value="list">Transaction List</TabsTrigger>
+              <TabsTrigger value="categorizer">Smart Categorizer</TabsTrigger>
+              <TabsTrigger value="learning">AI Learning</TabsTrigger>
             </TabsList>
             
             <TabsContent value="manager" className="mt-6">
@@ -57,6 +61,14 @@ const Transactions = () => {
                 refreshTrigger={refreshTrigger} 
                 onRefresh={handleRefresh}
               />
+            </TabsContent>
+            
+            <TabsContent value="categorizer" className="mt-6">
+              <SmartCategorizer />
+            </TabsContent>
+            
+            <TabsContent value="learning" className="mt-6">
+              <CategoryLearning />
             </TabsContent>
           </Tabs>
         </div>
