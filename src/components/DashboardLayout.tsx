@@ -85,9 +85,9 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 flex items-center justify-center">
               <img 
-                src="/lovable-uploads/0a001be8-de4d-4b8a-8807-fb97bd857f40.png" 
+                src="/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png" 
                 alt="Withu Logo" 
-                className="w-full h-full object-contain filter brightness-0 invert"
+                className="w-full h-full object-contain"
               />
             </div>
             {!isSidebarCollapsed && (
