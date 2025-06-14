@@ -32,7 +32,7 @@ const Invoices = () => {
         showBack={true}
         onBack={handleBackToList}
       >
-        <InvoiceBuilder />
+        <InvoiceBuilder onInvoiceCreated={handleBackToList} />
       </ResponsiveLayout>
     );
   }
@@ -43,17 +43,22 @@ const Invoices = () => {
         title="Invoices" 
         activeTab="invoices"
         headerActions={
-          <Button 
-            size="sm" 
-            onClick={handleCreateInvoice}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            Create Invoice
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              onClick={handleCreateInvoice}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Quick Add
+            </Button>
+          </div>
         }
       >
         <div className="p-4 lg:p-6 space-y-6">
+          <div className="text-center mb-6">
+            <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
+          </div>
           <InvoiceList />
         </div>
       </ResponsiveLayout>

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Save, Send, FileText, Eye } from "lucide-react";
+import { Plus, Trash2, Save, Send, FileText, Eye, Upload, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +42,11 @@ interface Invoice {
   status: 'draft' | 'sent' | 'paid' | 'overdue';
   notes?: string;
   template: string;
+  logoUrl?: string;
+}
+
+interface InvoiceBuilderProps {
+  onInvoiceCreated?: () => void;
 }
 
 const invoiceTemplates = [
@@ -60,11 +65,14 @@ const taxRates = [
   { value: 28, label: '28% GST' }
 ];
 
-export const InvoiceBuilder = () => {
+export const InvoiceBuilder = ({ onInvoiceCreated }: InvoiceBuilderProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>('');
   const [invoice, setInvoice] = useState<Invoice>({
     invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
     clientId: '',
@@ -114,6 +122,30 @@ export const InvoiceBuilder = () => {
     }
   };
 
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        setLogoFile(file);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setLogoPreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+        toast({
+          title: "Logo uploaded",
+          description: "Logo has been added to your invoice",
+        });
+      } else {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const calculateTotals = () => {
     const subtotal = invoice.items.reduce((sum, item) => {
       const itemAmount = item.quantity * item.rate;
@@ -153,10 +185,12 @@ export const InvoiceBuilder = () => {
   };
 
   const removeItem = (itemId: string) => {
-    setInvoice(prev => ({
-      ...prev,
-      items: prev.items.filter(item => item.id !== itemId)
-    }));
+    if (invoice.items.length > 1) {
+      setInvoice(prev => ({
+        ...prev,
+        items: prev.items.filter(item => item.id !== itemId)
+      }));
+    }
   };
 
   const updateItem = (itemId: string, field: keyof InvoiceItem, value: any) => {
@@ -178,10 +212,28 @@ export const InvoiceBuilder = () => {
   const saveInvoice = async (status: 'draft' | 'sent' = 'draft') => {
     if (!user) return;
 
+    if (!invoice.clientId) {
+      toast({
+        title: "Client Required",
+        description: "Please select a client for the invoice",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (invoice.items.some(item => !item.description || item.rate <= 0)) {
+      toast({
+        title: "Invalid Items",
+        description: "Please ensure all items have description and rate",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const invoiceData = {
         user_id: user.id,
-        client_id: invoice.clientId || null,
+        client_id: invoice.clientId,
         invoice_number: invoice.invoiceNumber,
         invoice_date: invoice.issueDate,
         due_date: invoice.dueDate,
@@ -222,19 +274,10 @@ export const InvoiceBuilder = () => {
         description: `Invoice ${status === 'draft' ? 'saved as draft' : 'sent to client'}`,
       });
 
-      // Reset form
-      setInvoice({
-        invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
-        clientId: '',
-        issueDate: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        items: [{ id: '1', description: '', quantity: 1, rate: 0, taxRate: 18, amount: 0 }],
-        subtotal: 0,
-        taxAmount: 0,
-        total: 0,
-        status: 'draft',
-        template: 'modern'
-      });
+      // Call the callback to go back to list
+      if (onInvoiceCreated) {
+        onInvoiceCreated();
+      }
 
     } catch (error) {
       console.error('Error saving invoice:', error);
@@ -271,6 +314,46 @@ export const InvoiceBuilder = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Invoice Builder Form */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Company Logo Upload */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <ImageIcon className="w-5 h-5" />
+                <span>Company Logo</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <Input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Logo
+                  </Button>
+                </div>
+                {logoPreview && (
+                  <div className="w-16 h-16 border rounded-lg overflow-hidden">
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Template Selection */}
           <Card>
             <CardHeader>
@@ -335,7 +418,7 @@ export const InvoiceBuilder = () => {
               </div>
 
               <div>
-                <Label htmlFor="client">Select Client</Label>
+                <Label htmlFor="client">Select Client *</Label>
                 <Select value={invoice.clientId} onValueChange={(value) => setInvoice(prev => ({ ...prev, clientId: value }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a client..." />
@@ -368,7 +451,7 @@ export const InvoiceBuilder = () => {
                 {invoice.items.map((item, index) => (
                   <div key={item.id} className="grid grid-cols-12 gap-3 items-end p-4 border rounded-lg">
                     <div className="col-span-4">
-                      <Label>Description</Label>
+                      <Label>Description *</Label>
                       <Input
                         placeholder="Item description..."
                         value={item.description}
@@ -379,14 +462,14 @@ export const InvoiceBuilder = () => {
                       <Label>Quantity</Label>
                       <Input
                         type="number"
-                        min="0"
+                        min="0.01"
                         step="0.01"
                         value={item.quantity}
-                        onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 1)}
                       />
                     </div>
                     <div className="col-span-2">
-                      <Label>Rate (₹)</Label>
+                      <Label>Rate (₹) *</Label>
                       <Input
                         type="number"
                         min="0"
@@ -425,6 +508,7 @@ export const InvoiceBuilder = () => {
                         size="sm"
                         onClick={() => removeItem(item.id)}
                         disabled={invoice.items.length === 1}
+                        className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -480,14 +564,25 @@ export const InvoiceBuilder = () => {
             </CardHeader>
             <CardContent>
               <div className="border rounded-lg p-6 bg-white text-sm">
-                {/* Header */}
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold mb-2">INVOICE</h2>
-                  <div className="text-gray-600">
-                    <p>Invoice #: {invoice.invoiceNumber}</p>
-                    <p>Date: {new Date(invoice.issueDate).toLocaleDateString()}</p>
-                    <p>Due: {new Date(invoice.dueDate).toLocaleDateString()}</p>
+                {/* Header with Logo */}
+                <div className="mb-6 flex justify-between items-start">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">INVOICE</h2>
+                    <div className="text-gray-600">
+                      <p>Invoice #: {invoice.invoiceNumber}</p>
+                      <p>Date: {new Date(invoice.issueDate).toLocaleDateString()}</p>
+                      <p>Due: {new Date(invoice.dueDate).toLocaleDateString()}</p>
+                    </div>
                   </div>
+                  {logoPreview && (
+                    <div className="w-16 h-16">
+                      <img
+                        src={logoPreview}
+                        alt="Company Logo"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Client Info */}
