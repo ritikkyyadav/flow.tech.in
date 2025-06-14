@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Save, Send, FileText, Eye, Calendar } from "lucide-react";
+import { Plus, Trash2, Save, Send, FileText, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -24,11 +24,9 @@ interface InvoiceItem {
 interface Client {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  gstNumber?: string;
-  paymentTerms: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
 }
 
 interface Invoice {
@@ -81,7 +79,9 @@ export const InvoiceBuilder = () => {
   });
 
   useEffect(() => {
-    fetchClients();
+    if (user) {
+      fetchClients();
+    }
   }, [user]);
 
   useEffect(() => {
@@ -91,16 +91,26 @@ export const InvoiceBuilder = () => {
   const fetchClients = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('name');
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('name');
 
-    if (error) {
-      console.error('Error fetching clients:', error);
-    } else {
+      if (error) {
+        console.error('Error fetching clients:', error);
+        throw error;
+      }
+
       setClients(data || []);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch clients",
+        variant: "destructive",
+      });
     }
   };
 
@@ -170,29 +180,60 @@ export const InvoiceBuilder = () => {
 
     try {
       const invoiceData = {
-        ...invoice,
-        status,
         user_id: user.id,
-        client_id: invoice.clientId,
+        client_id: invoice.clientId || null,
         invoice_number: invoice.invoiceNumber,
-        issue_date: invoice.issueDate,
+        invoice_date: invoice.issueDate,
         due_date: invoice.dueDate,
-        items: JSON.stringify(invoice.items),
         subtotal: invoice.subtotal,
         tax_amount: invoice.taxAmount,
         total: invoice.total,
-        template: selectedTemplate
+        status,
+        notes: invoice.notes || null,
+        currency: 'INR'
       };
 
-      const { error } = await supabase
+      const { data: invoiceResult, error: invoiceError } = await supabase
         .from('invoices')
-        .insert([invoiceData]);
+        .insert([invoiceData])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (invoiceError) throw invoiceError;
+
+      // Insert invoice items
+      const itemsData = invoice.items.map(item => ({
+        invoice_id: invoiceResult.id,
+        description: item.description,
+        quantity: item.quantity,
+        rate: item.rate,
+        amount: item.amount,
+        tax_rate: item.taxRate
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('invoice_items')
+        .insert(itemsData);
+
+      if (itemsError) throw itemsError;
 
       toast({
         title: "Success",
         description: `Invoice ${status === 'draft' ? 'saved as draft' : 'sent to client'}`,
+      });
+
+      // Reset form
+      setInvoice({
+        invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+        clientId: '',
+        issueDate: new Date().toISOString().split('T')[0],
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        items: [{ id: '1', description: '', quantity: 1, rate: 0, taxRate: 18, amount: 0 }],
+        subtotal: 0,
+        taxAmount: 0,
+        total: 0,
+        status: 'draft',
+        template: 'modern'
       });
 
     } catch (error) {
@@ -302,7 +343,7 @@ export const InvoiceBuilder = () => {
                   <SelectContent>
                     {clients.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
-                        {client.name} - {client.email}
+                        {client.name} {client.email ? `- ${client.email}` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -455,8 +496,8 @@ export const InvoiceBuilder = () => {
                     <h3 className="font-semibold mb-2">Bill To:</h3>
                     <div className="text-gray-700">
                       <p className="font-medium">{selectedClient.name}</p>
-                      <p>{selectedClient.email}</p>
-                      <p>{selectedClient.phone}</p>
+                      {selectedClient.email && <p>{selectedClient.email}</p>}
+                      {selectedClient.phone && <p>{selectedClient.phone}</p>}
                       {selectedClient.address && (
                         <p className="whitespace-pre-line">{selectedClient.address}</p>
                       )}

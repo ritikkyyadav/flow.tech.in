@@ -13,20 +13,24 @@ import { useToast } from "@/hooks/use-toast";
 interface Invoice {
   id: string;
   invoice_number: string;
-  client_name: string;
-  client_email: string;
-  issue_date: string;
+  client_id: string | null;
+  invoice_date: string;
   due_date: string;
   total: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-  template: string;
+  status: 'draft' | 'sent' | 'viewed' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled';
   created_at: string;
+  clients?: {
+    name: string;
+    email: string;
+  } | null;
 }
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
   sent: 'bg-blue-100 text-blue-800',
+  viewed: 'bg-purple-100 text-purple-800',
   paid: 'bg-green-100 text-green-800',
+  partially_paid: 'bg-yellow-100 text-yellow-800',
   overdue: 'bg-red-100 text-red-800',
   cancelled: 'bg-gray-100 text-gray-600'
 };
@@ -35,7 +39,9 @@ const statusOptions = [
   { value: 'all', label: 'All Invoices' },
   { value: 'draft', label: 'Draft' },
   { value: 'sent', label: 'Sent' },
+  { value: 'viewed', label: 'Viewed' },
   { value: 'paid', label: 'Paid' },
+  { value: 'partially_paid', label: 'Partially Paid' },
   { value: 'overdue', label: 'Overdue' },
   { value: 'cancelled', label: 'Cancelled' }
 ];
@@ -69,24 +75,32 @@ export const InvoiceList = () => {
         .from('invoices')
         .select(`
           *,
-          clients!inner(name, email)
+          clients:client_id (
+            name,
+            email
+          )
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching invoices:', error);
+        throw error;
+      }
 
-      const formattedInvoices = (data || []).map(invoice => ({
+      const formattedInvoices: Invoice[] = (data || []).map(invoice => ({
         id: invoice.id,
         invoice_number: invoice.invoice_number,
-        client_name: invoice.clients.name,
-        client_email: invoice.clients.email,
-        issue_date: invoice.issue_date,
+        client_id: invoice.client_id,
+        invoice_date: invoice.invoice_date,
         due_date: invoice.due_date,
-        total: invoice.total,
-        status: invoice.status,
-        template: invoice.template,
-        created_at: invoice.created_at
+        total: Number(invoice.total),
+        status: invoice.status as Invoice['status'],
+        created_at: invoice.created_at,
+        clients: invoice.clients ? {
+          name: invoice.clients.name,
+          email: invoice.clients.email || ''
+        } : null
       }));
 
       setInvoices(formattedInvoices);
@@ -97,6 +111,7 @@ export const InvoiceList = () => {
         description: "Failed to fetch invoices",
         variant: "destructive",
       });
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
@@ -109,8 +124,8 @@ export const InvoiceList = () => {
     if (searchTerm) {
       filtered = filtered.filter(invoice =>
         invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invoice.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invoice.client_email.toLowerCase().includes(searchTerm.toLowerCase())
+        (invoice.clients?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (invoice.clients?.email || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -382,14 +397,13 @@ export const InvoiceList = () => {
                     <tr key={invoice.id} className="border-b hover:bg-gray-50">
                       <td className="py-4">
                         <div className="font-medium">{invoice.invoice_number}</div>
-                        <div className="text-sm text-gray-500">{invoice.template}</div>
                       </td>
                       <td className="py-4">
-                        <div className="font-medium">{invoice.client_name}</div>
-                        <div className="text-sm text-gray-500">{invoice.client_email}</div>
+                        <div className="font-medium">{invoice.clients?.name || 'No Client'}</div>
+                        <div className="text-sm text-gray-500">{invoice.clients?.email || ''}</div>
                       </td>
                       <td className="py-4 text-gray-900">
-                        {new Date(invoice.issue_date).toLocaleDateString()}
+                        {new Date(invoice.invoice_date).toLocaleDateString()}
                       </td>
                       <td className="py-4">
                         <div className={`${
@@ -408,7 +422,7 @@ export const InvoiceList = () => {
                           className={`${statusColors[invoice.status]} capitalize`}
                           variant="outline"
                         >
-                          {invoice.status}
+                          {invoice.status.replace('_', ' ')}
                         </Badge>
                       </td>
                       <td className="py-4">

@@ -8,6 +8,27 @@ import { TrendingUp, TrendingDown, Calendar, Users, FileText, DollarSign, Clock,
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+interface Invoice {
+  id: string;
+  user_id: string;
+  client_id: string | null;
+  invoice_number: string;
+  invoice_date: string;
+  due_date: string;
+  subtotal: number;
+  tax_amount: number;
+  total: number;
+  status: string;
+  currency: string;
+  notes: string | null;
+  payment_terms: string | null;
+  created_at: string;
+  updated_at: string;
+  clients?: {
+    name: string;
+  } | null;
+}
+
 interface AnalyticsData {
   monthlyRevenue: Array<{ month: string; revenue: number; invoices: number }>;
   clientAnalytics: Array<{ name: string; value: number; invoices: number }>;
@@ -58,21 +79,42 @@ export const BusinessAnalytics = () => {
           break;
       }
 
-      // Fetch invoices and clients data
-      const { data: invoices, error: invoicesError } = await supabase
-        .from('invoices')
-        .select(`
-          *,
-          clients!inner(name)
-        `)
-        .eq('user_id', user.id)
-        .gte('created_at', startDate.toISOString());
+      // Fetch invoices with client data using raw SQL to handle type issues
+      const { data: invoicesData, error: invoicesError } = await supabase
+        .rpc('get_invoices_with_clients', {
+          user_id: user.id,
+          start_date: startDate.toISOString()
+        })
+        .returns<Invoice[]>();
 
-      if (invoicesError) throw invoicesError;
+      // If RPC doesn't exist, fallback to direct query
+      let invoices: Invoice[] = [];
+      if (invoicesError) {
+        console.log('RPC not available, using direct query');
+        const { data: directInvoices, error: directError } = await supabase
+          .from('invoices')
+          .select(`
+            *,
+            clients:client_id (
+              name
+            )
+          `)
+          .eq('user_id', user.id)
+          .gte('created_at', startDate.toISOString()) as { data: Invoice[] | null; error: any };
+
+        if (directError) {
+          console.error('Error fetching invoices:', directError);
+          invoices = [];
+        } else {
+          invoices = directInvoices || [];
+        }
+      } else {
+        invoices = invoicesData || [];
+      }
 
       // Process monthly revenue data
-      const monthlyData = {};
-      invoices?.forEach(invoice => {
+      const monthlyData: Record<string, { month: string; revenue: number; invoices: number }> = {};
+      invoices.forEach(invoice => {
         const month = new Date(invoice.created_at).toLocaleDateString('en-US', { 
           year: 'numeric', 
           month: 'short' 
@@ -81,52 +123,52 @@ export const BusinessAnalytics = () => {
           monthlyData[month] = { month, revenue: 0, invoices: 0 };
         }
         if (invoice.status === 'paid') {
-          monthlyData[month].revenue += invoice.total;
+          monthlyData[month].revenue += Number(invoice.total);
         }
         monthlyData[month].invoices += 1;
       });
 
       // Process client analytics
-      const clientData = {};
-      invoices?.forEach(invoice => {
-        const clientName = invoice.clients.name;
+      const clientData: Record<string, { name: string; value: number; invoices: number }> = {};
+      invoices.forEach(invoice => {
+        const clientName = invoice.clients?.name || 'Unknown Client';
         if (!clientData[clientName]) {
           clientData[clientName] = { name: clientName, value: 0, invoices: 0 };
         }
         if (invoice.status === 'paid') {
-          clientData[clientName].value += invoice.total;
+          clientData[clientName].value += Number(invoice.total);
         }
         clientData[clientName].invoices += 1;
       });
 
       // Process status distribution
-      const statusData = {};
-      invoices?.forEach(invoice => {
+      const statusData: Record<string, { status: string; count: number; amount: number }> = {};
+      invoices.forEach(invoice => {
         if (!statusData[invoice.status]) {
           statusData[invoice.status] = { status: invoice.status, count: 0, amount: 0 };
         }
         statusData[invoice.status].count += 1;
-        statusData[invoice.status].amount += invoice.total;
+        statusData[invoice.status].amount += Number(invoice.total);
       });
 
       // Process payment trends (quarterly)
-      const paymentData = {};
-      invoices?.forEach(invoice => {
+      const paymentData: Record<string, { period: string; collected: number; outstanding: number }> = {};
+      invoices.forEach(invoice => {
         const quarter = `Q${Math.floor(new Date(invoice.created_at).getMonth() / 3) + 1} ${new Date(invoice.created_at).getFullYear()}`;
         if (!paymentData[quarter]) {
           paymentData[quarter] = { period: quarter, collected: 0, outstanding: 0 };
         }
         if (invoice.status === 'paid') {
-          paymentData[quarter].collected += invoice.total;
+          paymentData[quarter].collected += Number(invoice.total);
         } else if (invoice.status === 'sent' || invoice.status === 'overdue') {
-          paymentData[quarter].outstanding += invoice.total;
+          paymentData[quarter].outstanding += Number(invoice.total);
         }
       });
 
       setAnalytics({
         monthlyRevenue: Object.values(monthlyData).slice(-12),
         clientAnalytics: Object.values(clientData)
-          .sort((a: any, b: any) => b.value - a.value)
+          .sort((a, b) => b.value - a.value)
           .slice(0, 10),
         statusDistribution: Object.values(statusData),
         paymentTrends: Object.values(paymentData).slice(-8)
@@ -134,6 +176,13 @@ export const BusinessAnalytics = () => {
 
     } catch (error) {
       console.error('Error fetching analytics:', error);
+      // Set empty data on error
+      setAnalytics({
+        monthlyRevenue: [],
+        clientAnalytics: [],
+        statusDistribution: [],
+        paymentTrends: []
+      });
     } finally {
       setLoading(false);
     }
@@ -262,9 +311,9 @@ export const BusinessAnalytics = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Top Clients</p>
+                <p className="text-sm text-gray-600">Active Clients</p>
                 <p className="text-2xl font-bold">{analytics.clientAnalytics.length}</p>
-                <p className="text-sm text-gray-500 mt-1">Active clients</p>
+                <p className="text-sm text-gray-500 mt-1">Total clients</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <Users className="w-6 h-6 text-purple-600" />
@@ -341,7 +390,7 @@ export const BusinessAnalytics = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value, name) => [value, 'Count']} />
+                <Tooltip formatter={(value) => [value, 'Count']} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>

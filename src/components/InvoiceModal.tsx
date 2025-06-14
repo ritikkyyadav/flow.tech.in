@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface InvoiceModalProps {
   isOpen: boolean;
@@ -14,6 +16,7 @@ interface InvoiceModalProps {
 }
 
 export const InvoiceModal = ({ isOpen, onClose }: InvoiceModalProps) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     clientName: '',
     clientEmail: '',
@@ -30,7 +33,7 @@ export const InvoiceModal = ({ isOpen, onClose }: InvoiceModalProps) => {
     { value: 'corporate', label: 'Corporate' }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.clientName || !formData.clientEmail || !formData.amount || !formData.description) {
@@ -42,25 +45,102 @@ export const InvoiceModal = ({ isOpen, onClose }: InvoiceModalProps) => {
       return;
     }
 
-    // In a real app, this would generate and save the invoice
-    console.log('Creating invoice:', formData);
-    
-    toast({
-      title: "Success",
-      description: "Invoice created successfully",
-    });
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create an invoice",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Reset form
-    setFormData({
-      clientName: '',
-      clientEmail: '',
-      amount: '',
-      description: '',
-      dueDate: '',
-      template: 'modern'
-    });
+    try {
+      // First create a client if they don't exist
+      const { data: existingClient } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('email', formData.clientEmail)
+        .single();
 
-    onClose();
+      let clientId = existingClient?.id;
+
+      if (!clientId) {
+        const { data: newClient, error: clientError } = await supabase
+          .from('clients')
+          .insert([{
+            user_id: user.id,
+            name: formData.clientName,
+            email: formData.clientEmail
+          }])
+          .select('id')
+          .single();
+
+        if (clientError) throw clientError;
+        clientId = newClient.id;
+      }
+
+      // Create the invoice
+      const invoiceData = {
+        user_id: user.id,
+        client_id: clientId,
+        invoice_number: `INV-${Date.now().toString().slice(-6)}`,
+        invoice_date: new Date().toISOString(),
+        due_date: formData.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        subtotal: parseFloat(formData.amount),
+        tax_amount: 0,
+        total: parseFloat(formData.amount),
+        status: 'draft',
+        notes: formData.description,
+        currency: 'INR'
+      };
+
+      const { data: invoice, error: invoiceError } = await supabase
+        .from('invoices')
+        .insert([invoiceData])
+        .select()
+        .single();
+
+      if (invoiceError) throw invoiceError;
+
+      // Create an invoice item
+      const { error: itemError } = await supabase
+        .from('invoice_items')
+        .insert([{
+          invoice_id: invoice.id,
+          description: formData.description,
+          quantity: 1,
+          rate: parseFloat(formData.amount),
+          amount: parseFloat(formData.amount),
+          tax_rate: 0
+        }]);
+
+      if (itemError) throw itemError;
+
+      toast({
+        title: "Success",
+        description: "Invoice created successfully",
+      });
+
+      // Reset form
+      setFormData({
+        clientName: '',
+        clientEmail: '',
+        amount: '',
+        description: '',
+        dueDate: '',
+        template: 'modern'
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create invoice",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
