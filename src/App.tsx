@@ -1,7 +1,8 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { Sonner } from 'sonner'
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import {
   Index,
   Dashboard,
@@ -23,11 +24,11 @@ const queryClient = new QueryClient()
 
 function App() {
   return (
-    <QueryClient client={queryClient}>
+    <QueryClientProvider client={queryClient}>
       <TransactionProvider>
         <TooltipProvider>
           <Toaster />
-          <Sonner />
+          <SonnerToaster />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -66,7 +67,7 @@ function App() {
           </BrowserRouter>
         </TooltipProvider>
       </TransactionProvider>
-    </QueryClient>
+    </QueryClientProvider>
   );
 }
 
