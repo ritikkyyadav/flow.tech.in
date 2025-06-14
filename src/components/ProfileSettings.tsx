@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, User, Building, Bell, Shield, CreditCard } from "lucide-react";
+import { SecuritySettings } from "@/components/SecuritySettings";
+import { BillingSettings } from "@/components/BillingSettings";
 
 interface ProfileData {
   full_name: string;
