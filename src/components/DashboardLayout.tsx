@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   CircleDollarSign, 
   TrendingUp, 
@@ -10,7 +11,8 @@ import {
   User,
   List,
   Plus,
-  MessageSquare
+  MessageSquare,
+  LogOut
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -19,6 +21,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { user, signOut } = useAuth();
 
   const menuItems = [
     { icon: CircleDollarSign, label: "Dashboard", href: "/", active: true },
@@ -27,6 +30,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { icon: List, label: "Reports", href: "/reports" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -77,17 +84,29 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* User Profile */}
         <div className="p-4 border-t border-gray-800">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 mb-3">
             <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
               <User className="w-4 h-4" />
             </div>
             {!isSidebarCollapsed && (
               <div className="flex-1">
-                <p className="text-sm font-medium">John Doe</p>
-                <p className="text-xs text-gray-400">john@example.com</p>
+                <p className="text-sm font-medium">{user?.email}</p>
+                <p className="text-xs text-gray-400">User</p>
               </div>
             )}
           </div>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-white hover:bg-gray-800"
+            onClick={handleSignOut}
+          >
+            <LogOut className="w-4 h-4" />
+            {!isSidebarCollapsed && (
+              <span className="ml-2">Sign Out</span>
+            )}
+          </Button>
         </div>
       </aside>
 

@@ -9,7 +9,66 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          business_address: string | null
+          business_type: string | null
+          company_name: string | null
+          created_at: string | null
+          currency: string | null
+          date_format: string | null
+          email_notifications: boolean | null
+          full_name: string | null
+          gst_number: string | null
+          id: string
+          language: string | null
+          phone: string | null
+          profile_picture_url: string | null
+          push_notifications: boolean | null
+          sms_notifications: boolean | null
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          business_address?: string | null
+          business_type?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          currency?: string | null
+          date_format?: string | null
+          email_notifications?: boolean | null
+          full_name?: string | null
+          gst_number?: string | null
+          id: string
+          language?: string | null
+          phone?: string | null
+          profile_picture_url?: string | null
+          push_notifications?: boolean | null
+          sms_notifications?: boolean | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          business_address?: string | null
+          business_type?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          currency?: string | null
+          date_format?: string | null
+          email_notifications?: boolean | null
+          full_name?: string | null
+          gst_number?: string | null
+          id?: string
+          language?: string | null
+          phone?: string | null
+          profile_picture_url?: string | null
+          push_notifications?: boolean | null
+          sms_notifications?: boolean | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
