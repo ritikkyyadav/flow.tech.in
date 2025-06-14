@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { 
-  CircleDollarSign, 
   TrendingUp, 
   FileText, 
   Settings,
@@ -12,7 +11,8 @@ import {
   List,
   Plus,
   MessageSquare,
-  LogOut
+  LogOut,
+  Home
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -24,10 +24,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, signOut } = useAuth();
 
   const menuItems = [
-    { icon: CircleDollarSign, label: "Dashboard", href: "/", active: true },
+    { icon: Home, label: "Dashboard", href: "/", active: true },
     { icon: TrendingUp, label: "Transactions", href: "/transactions" },
     { icon: FileText, label: "Invoices", href: "/invoices" },
     { icon: List, label: "Reports", href: "/reports" },
+    { icon: User, label: "Profile", href: "/profile" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
 
@@ -47,8 +48,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Logo */}
         <div className="p-6 border-b border-gray-800">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <CircleDollarSign className="w-5 h-5 text-black" />
+            <div className="w-8 h-8 flex items-center justify-center">
+              <img 
+                src="/lovable-uploads/0a001be8-de4d-4b8a-8807-fb97bd857f40.png" 
+                alt="Withu Logo" 
+                className="w-full h-full object-contain filter brightness-0 invert"
+              />
             </div>
             {!isSidebarCollapsed && (
               <div>

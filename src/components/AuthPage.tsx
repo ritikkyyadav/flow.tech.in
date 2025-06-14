@@ -4,14 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CircleDollarSign, Eye, EyeOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { GoogleAuthButton } from "@/components/GoogleAuthButton";
+import { EmailVerification } from "@/components/EmailVerification";
+import { PasswordReset } from "@/components/PasswordReset";
 
 export const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<"login" | "signup" | "verify" | "reset">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -38,6 +44,15 @@ export const AuthPage = () => {
       return;
     }
 
+    if (formData.password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     const redirectUrl = `${window.location.origin}/`;
 
@@ -59,9 +74,11 @@ export const AuthPage = () => {
         variant: "destructive"
       });
     } else {
+      setPendingEmail(formData.email);
+      setMode("verify");
       toast({
-        title: "Success!",
-        description: "Please check your email to confirm your account.",
+        title: "Check your email",
+        description: "We've sent you a verification code.",
       });
     }
     setLoading(false);
@@ -82,9 +99,31 @@ export const AuthPage = () => {
         description: error.message,
         variant: "destructive"
       });
+    } else if (rememberMe) {
+      // Set a longer session persistence
+      localStorage.setItem('withu_remember_me', 'true');
     }
     setLoading(false);
   };
+
+  if (mode === "verify") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <EmailVerification
+          email={pendingEmail}
+          onBack={() => setMode("signup")}
+        />
+      </div>
+    );
+  }
+
+  if (mode === "reset") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <PasswordReset onBack={() => setMode("login")} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -92,9 +131,11 @@ export const AuthPage = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
-              <CircleDollarSign className="w-8 h-8 text-white" />
-            </div>
+            <img 
+              src="/lovable-uploads/0a001be8-de4d-4b8a-8807-fb97bd857f40.png" 
+              alt="Withu Logo" 
+              className="w-16 h-16 object-contain"
+            />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Withu</h1>
           <p className="text-gray-600">AI-Powered Finance Management</p>
@@ -103,12 +144,24 @@ export const AuthPage = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-center">
-              {isLogin ? "Welcome Back" : "Create Account"}
+              {mode === "login" ? "Welcome Back" : "Create Account"}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={isLogin ? handleSignIn : handleSignUp} className="space-y-4">
-              {!isLogin && (
+          <CardContent className="space-y-4">
+            {/* Google Auth Button */}
+            <GoogleAuthButton mode={mode === "login" ? "signin" : "signup"} />
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-muted-foreground">Or continue with email</span>
+              </div>
+            </div>
+
+            <form onSubmit={mode === "login" ? handleSignIn : handleSignUp} className="space-y-4">
+              {mode === "signup" && (
                 <div>
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input
@@ -117,7 +170,7 @@ export const AuthPage = () => {
                     type="text"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    required={!isLogin}
+                    required={mode === "signup"}
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -164,7 +217,7 @@ export const AuthPage = () => {
                 </div>
               </div>
 
-              {!isLogin && (
+              {mode === "signup" && (
                 <div>
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <Input
@@ -173,9 +226,30 @@ export const AuthPage = () => {
                     type="password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    required={!isLogin}
+                    required={mode === "signup"}
                     placeholder="Confirm your password"
                   />
+                </div>
+              )}
+
+              {mode === "login" && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    />
+                    <Label htmlFor="rememberMe" className="text-sm">Remember me</Label>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="p-0 text-sm"
+                    onClick={() => setMode("reset")}
+                  >
+                    Forgot password?
+                  </Button>
                 </div>
               )}
 
@@ -184,19 +258,19 @@ export const AuthPage = () => {
                 className="w-full bg-black hover:bg-gray-800"
                 disabled={loading}
               >
-                {loading ? "Loading..." : (isLogin ? "Sign In" : "Sign Up")}
+                {loading ? "Loading..." : (mode === "login" ? "Sign In" : "Sign Up")}
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
+            <div className="text-center">
               <p className="text-sm text-gray-600">
-                {isLogin ? "Don't have an account?" : "Already have an account?"}
+                {mode === "login" ? "Don't have an account?" : "Already have an account?"}
                 <Button
                   variant="link"
                   className="p-0 ml-1 text-black"
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => setMode(mode === "login" ? "signup" : "login")}
                 >
-                  {isLogin ? "Sign up" : "Sign in"}
+                  {mode === "login" ? "Sign up" : "Sign in"}
                 </Button>
               </p>
             </div>
