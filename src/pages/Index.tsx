@@ -13,6 +13,9 @@ import { FinancialInsights } from "@/components/FinancialInsights";
 import { CashFlowChart } from "@/components/CashFlowChart";
 import { BudgetPerformance } from "@/components/BudgetPerformance";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TransactionCategorizer } from "@/components/ai/TransactionCategorizer";
+import { FinancialIntelligence } from "@/components/ai/FinancialIntelligence";
+import { ConversationalAssistant } from "@/components/ai/ConversationalAssistant";
 
 const Index = () => {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
@@ -56,14 +59,18 @@ const Index = () => {
         
         {/* Main Content Tabs */}
         <Tabs defaultValue="dashboard" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="insights">AI Insights</TabsTrigger>
+            <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
+            {/* AI-Powered Transaction Categorizer */}
+            <TransactionCategorizer />
+
             {/* Primary Analytics Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Cash Flow Analysis */}
@@ -97,9 +104,17 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="insights" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <FinancialInsights refreshTrigger={refreshTrigger} />
-              <AIInsights />
+            <FinancialIntelligence />
+          </TabsContent>
+
+          <TabsContent value="ai-assistant" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <ConversationalAssistant />
+              </div>
+              <div className="space-y-4">
+                <TransactionCategorizer />
+              </div>
             </div>
           </TabsContent>
         </Tabs>
