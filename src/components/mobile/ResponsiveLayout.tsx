@@ -47,6 +47,7 @@ export const ResponsiveLayout = ({
     if (path === '/transactions') return 'transactions';
     if (path === '/invoices') return 'invoices';
     if (path === '/reports') return 'reports';
+    if (path === '/settings') return 'settings';
     if (path === '/profile') return 'profile';
     return 'dashboard';
   })();
@@ -69,6 +70,9 @@ export const ResponsiveLayout = ({
         break;
       case 'reports':
         navigate('/reports');
+        break;
+      case 'settings':
+        navigate('/settings');
         break;
       case 'profile':
         navigate('/profile');
