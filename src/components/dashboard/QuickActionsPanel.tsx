@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -105,37 +106,33 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
   const handleActionClick = (actionId: string) => {
     console.log(`Action clicked: ${actionId}`);
     
-    switch (actionId) {
-      case 'add-transaction':
-        onRefresh();
-        break;
-      case 'generate-report':
-        console.log('Generating report...');
-        break;
-      case 'create-invoice':
-        console.log('Opening invoice builder...');
-        break;
-      case 'set-budget':
-        console.log('Opening budget settings...');
-        break;
-      case 'export-data':
-        console.log('Exporting data...');
-        break;
-      default:
-        console.log(`Action ${actionId} not implemented yet`);
+    try {
+      switch (actionId) {
+        case 'add-transaction':
+          onRefresh();
+          break;
+        case 'generate-report':
+          console.log('Generating report...');
+          break;
+        case 'create-invoice':
+          console.log('Opening invoice builder...');
+          break;
+        case 'set-budget':
+          console.log('Opening budget settings...');
+          break;
+        case 'export-data':
+          console.log('Exporting data...');
+          break;
+        default:
+          console.log(`Action ${actionId} not implemented yet`);
+      }
+    } catch (error) {
+      console.error('Error handling action:', error);
     }
   };
 
   return (
     <Card className={cn("shadow-lg border-0 bg-gradient-to-br from-gray-900 to-black text-white overflow-hidden", className)}>
-      {/* Background Pattern */}
-      <div 
-        className="absolute inset-0 opacity-20" 
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23grid)' /%3E%3C/svg%3E")`
-        }}
-      />
-      
       <CardHeader className="relative z-10">
         <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
           <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
