@@ -2,18 +2,13 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings, TrendingUp, AlertCircle, Target, DollarSign, Calendar, Edit } from 'lucide-react';
+import { Target, DollarSign, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBudgets } from '@/contexts/BudgetContext';
 import { useTransactions } from '@/contexts/TransactionContext';
 
-interface BudgetOverviewProps {
-  onEditBudget?: (budgetId: string) => void;
-}
-
-export const BudgetOverview = ({ onEditBudget }: BudgetOverviewProps) => {
+export const BudgetOverview = () => {
   const { budgets, loading } = useBudgets();
   const { transactions } = useTransactions();
 
@@ -28,6 +23,8 @@ export const BudgetOverview = ({ onEditBudget }: BudgetOverviewProps) => {
 
   const budgetData = useMemo(() => {
     if (!budgets || !transactions) return [];
+
+    console.log('Computing budget data with budgets:', budgets.length, 'transactions:', transactions.length);
 
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
@@ -174,24 +171,13 @@ export const BudgetOverview = ({ onEditBudget }: BudgetOverviewProps) => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900">
-                          {formatCurrency(budget.spent)}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          of {formatCurrency(budget.amount)}
-                        </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-gray-900">
+                        {formatCurrency(budget.spent)}
                       </div>
-                      {onEditBudget && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onEditBudget(budget.id)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      )}
+                      <div className="text-sm text-gray-500">
+                        of {formatCurrency(budget.amount)}
+                      </div>
                     </div>
                   </div>
 

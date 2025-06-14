@@ -51,14 +51,20 @@ export const useBudgets = () => {
 export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [alerts, setAlerts] = useState<BudgetAlert[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
   const refreshBudgets = async () => {
-    if (!user) return;
+    if (!user) {
+      setBudgets([]);
+      setAlerts([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
+      console.log('Fetching budgets for user:', user.id);
       
       // Fetch budgets
       const { data: budgetData, error: budgetError } = await supabase
@@ -68,7 +74,12 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (budgetError) throw budgetError;
+      if (budgetError) {
+        console.error('Budget fetch error:', budgetError);
+        throw budgetError;
+      }
+
+      console.log('Fetched budgets:', budgetData);
 
       // Fetch alerts
       const { data: alertData, error: alertError } = await supabase
@@ -77,27 +88,41 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (alertError) throw alertError;
+      if (alertError) {
+        console.error('Alert fetch error:', alertError);
+        // Don't throw error for alerts, just log it
+        setAlerts([]);
+      } else {
+        setAlerts(alertData || []);
+      }
 
       setBudgets(budgetData || []);
-      setAlerts(alertData || []);
     } catch (error) {
       console.error('Error fetching budgets:', error);
       toast.error('Failed to load budget data');
+      setBudgets([]);
+      setAlerts([]);
     } finally {
       setLoading(false);
     }
   };
 
   const createBudget = async (budgetData: Omit<Budget, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return;
+    if (!user) {
+      toast.error('Please log in to create budgets');
+      return;
+    }
 
     try {
+      console.log('Creating budget:', budgetData);
       const { error } = await supabase
         .from('budgets')
         .insert([{ ...budgetData, user_id: user.id }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Budget creation error:', error);
+        throw error;
+      }
 
       toast.success('Budget created successfully');
       await refreshBudgets();
@@ -109,12 +134,16 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const updateBudget = async (id: string, updates: Partial<Budget>) => {
     try {
+      console.log('Updating budget:', id, updates);
       const { error } = await supabase
         .from('budgets')
         .update(updates)
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Budget update error:', error);
+        throw error;
+      }
 
       toast.success('Budget updated successfully');
       await refreshBudgets();
@@ -126,12 +155,16 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const deleteBudget = async (id: string) => {
     try {
+      console.log('Deleting budget:', id);
       const { error } = await supabase
         .from('budgets')
         .update({ is_active: false })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Budget deletion error:', error);
+        throw error;
+      }
 
       toast.success('Budget deleted successfully');
       await refreshBudgets();
@@ -142,10 +175,9 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   useEffect(() => {
-    if (user) {
-      refreshBudgets();
-    }
-  }, [user]);
+    console.log('BudgetProvider useEffect triggered, user:', user?.id);
+    refreshBudgets();
+  }, [user?.id]); // Only depend on user.id to prevent infinite loops
 
   return (
     <BudgetContext.Provider
