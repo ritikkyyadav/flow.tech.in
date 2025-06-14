@@ -9,6 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          spending_limit: number | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          spending_limit?: number | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          spending_limit?: number | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_address: string | null
@@ -68,6 +134,136 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      transaction_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          transaction_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          transaction_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_attachments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_business_related: boolean | null
+          is_recurring: boolean | null
+          is_reimbursable: boolean | null
+          is_tax_exempt: boolean | null
+          location: string | null
+          parent_transaction_id: string | null
+          payment_method: string | null
+          recurring_end_date: string | null
+          recurring_frequency: string | null
+          recurring_occurrences: number | null
+          reference_number: string | null
+          source_client: string | null
+          subcategory: string | null
+          tax_rate: number | null
+          tds_amount: number | null
+          transaction_date: string
+          type: string
+          updated_at: string
+          user_id: string
+          vendor_merchant: string | null
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_business_related?: boolean | null
+          is_recurring?: boolean | null
+          is_reimbursable?: boolean | null
+          is_tax_exempt?: boolean | null
+          location?: string | null
+          parent_transaction_id?: string | null
+          payment_method?: string | null
+          recurring_end_date?: string | null
+          recurring_frequency?: string | null
+          recurring_occurrences?: number | null
+          reference_number?: string | null
+          source_client?: string | null
+          subcategory?: string | null
+          tax_rate?: number | null
+          tds_amount?: number | null
+          transaction_date?: string
+          type: string
+          updated_at?: string
+          user_id: string
+          vendor_merchant?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_business_related?: boolean | null
+          is_recurring?: boolean | null
+          is_reimbursable?: boolean | null
+          is_tax_exempt?: boolean | null
+          location?: string | null
+          parent_transaction_id?: string | null
+          payment_method?: string | null
+          recurring_end_date?: string | null
+          recurring_frequency?: string | null
+          recurring_occurrences?: number | null
+          reference_number?: string | null
+          source_client?: string | null
+          subcategory?: string | null
+          tax_rate?: number | null
+          tds_amount?: number | null
+          transaction_date?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+          vendor_merchant?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_parent_transaction_id_fkey"
+            columns: ["parent_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

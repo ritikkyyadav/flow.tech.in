@@ -7,8 +7,10 @@ import { QuickActions } from "@/components/QuickActions";
 import { FinancialCharts } from "@/components/FinancialCharts";
 import { AIInsights } from "@/components/AIInsights";
 import { TransactionModal } from "@/components/TransactionModal";
+import { TransactionAnalytics } from "@/components/TransactionAnalytics";
 import { InvoiceModal } from "@/components/InvoiceModal";
 import { AIChatAssistant } from "@/components/AIChatAssistant";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
@@ -50,14 +52,35 @@ const Index = () => {
         {/* Quick Actions */}
         <QuickActions onAction={handleQuickAction} />
         
-        {/* Charts and Analytics */}
-        <FinancialCharts refreshTrigger={refreshTrigger} />
-        
-        {/* AI Insights */}
-        <AIInsights />
-        
-        {/* Recent Transactions */}
-        <RecentTransactions refreshTrigger={refreshTrigger} />
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="dashboard" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="insights">AI Insights</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-6">
+            {/* Charts and Analytics */}
+            <FinancialCharts refreshTrigger={refreshTrigger} />
+            
+            {/* Recent Transactions */}
+            <RecentTransactions refreshTrigger={refreshTrigger} />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <TransactionAnalytics refreshTrigger={refreshTrigger} />
+          </TabsContent>
+
+          <TabsContent value="transactions" className="space-y-6">
+            <RecentTransactions refreshTrigger={refreshTrigger} />
+          </TabsContent>
+
+          <TabsContent value="insights" className="space-y-6">
+            <AIInsights />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Modals */}
