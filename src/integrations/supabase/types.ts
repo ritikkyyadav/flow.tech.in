@@ -9,6 +9,124 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      budget_alerts: {
+        Row: {
+          alert_type: string
+          budget_id: string
+          created_at: string
+          id: string
+          is_sent: boolean
+          sent_at: string | null
+          threshold_percentage: number
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          budget_id: string
+          created_at?: string
+          id?: string
+          is_sent?: boolean
+          sent_at?: string | null
+          threshold_percentage: number
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          budget_id?: string
+          created_at?: string
+          id?: string
+          is_sent?: boolean
+          sent_at?: string | null
+          threshold_percentage?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_alerts_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_history: {
+        Row: {
+          budget_id: string
+          change_reason: string | null
+          changed_by: string
+          created_at: string
+          id: string
+          new_amount: number
+          old_amount: number | null
+        }
+        Insert: {
+          budget_id: string
+          change_reason?: string | null
+          changed_by: string
+          created_at?: string
+          id?: string
+          new_amount: number
+          old_amount?: number | null
+        }
+        Update: {
+          budget_id?: string
+          change_reason?: string | null
+          changed_by?: string
+          created_at?: string
+          id?: string
+          new_amount?: number
+          old_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_history_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budgets: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          end_date: string | null
+          id: string
+          is_active: boolean
+          period: string
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          period?: string
+          start_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          period?: string
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       business_profiles: {
         Row: {
           business_address: string | null

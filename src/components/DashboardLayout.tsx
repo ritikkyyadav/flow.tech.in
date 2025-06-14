@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,8 @@ import {
   MessageSquare,
   LogOut,
   Home,
-  BarChart3
+  BarChart3,
+  Target
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -31,6 +31,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
   const menuItems = [
     { id: "dashboard", icon: Home, label: "Dashboard", active: activeTab === "dashboard" },
     { id: "transactions", icon: TrendingUp, label: "Transactions", active: activeTab === "transactions" },
+    { id: "budget", icon: Target, label: "Budget", active: activeTab === "budget" },
     { id: "invoices", icon: FileText, label: "Invoices", active: activeTab === "invoices" },
     { id: "reports", icon: BarChart3, label: "Reports", active: activeTab === "reports" },
     { id: "profile", icon: User, label: "Profile", active: activeTab === "profile" },
@@ -49,6 +50,9 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         break;
       case 'transactions':
         navigate('/transactions');
+        break;
+      case 'budget':
+        navigate('/budget');
         break;
       case 'invoices':
         navigate('/invoices');

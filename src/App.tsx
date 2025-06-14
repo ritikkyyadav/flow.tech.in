@@ -1,48 +1,95 @@
 
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { Toaster as SonnerToaster } from "sonner";
-import {
-  Index,
-  Dashboard,
-  Transactions,
-  Invoices,
-  Reports,
-  Profile,
-  Settings,
-  NotFound,
-} from "@/pages";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import {
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
 import { TransactionProvider } from "@/contexts/TransactionContext";
+import { BudgetProvider } from "@/contexts/BudgetContext";
+import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import Transactions from "./pages/Transactions";
+import Invoices from "./pages/Invoices";
+import Reports from "./pages/Reports";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import Budget from "./pages/Budget";
+import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TransactionProvider>
-        <TooltipProvider>
-          <Toaster />
-          <SonnerToaster />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/invoices" element={<Invoices />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </TransactionProvider>
+      <TooltipProvider>
+        <TransactionProvider>
+          <BudgetProvider>
+            <Toaster />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/transactions"
+                  element={
+                    <ProtectedRoute>
+                      <Transactions />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/invoices"
+                  element={
+                    <ProtectedRoute>
+                      <Invoices />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/reports"
+                  element={
+                    <ProtectedRoute>
+                      <Reports />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/budget"
+                  element={
+                    <ProtectedRoute>
+                      <Budget />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </BudgetProvider>
+        </TransactionProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
