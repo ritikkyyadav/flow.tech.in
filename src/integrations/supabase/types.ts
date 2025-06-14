@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      business_profiles: {
+        Row: {
+          business_address: string | null
+          business_registration_number: string | null
+          business_type: string | null
+          company_name: string | null
+          created_at: string | null
+          gst_number: string | null
+          id: string
+          pincode: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          business_address?: string | null
+          business_registration_number?: string | null
+          business_type?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          gst_number?: string | null
+          id?: string
+          pincode?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          business_address?: string | null
+          business_registration_number?: string | null
+          business_type?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          gst_number?: string | null
+          id?: string
+          pincode?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -184,6 +223,33 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string | null
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean | null
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string | null
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string | null
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_address: string | null
@@ -192,10 +258,14 @@ export type Database = {
           created_at: string | null
           currency: string | null
           date_format: string | null
+          date_of_birth: string | null
           email_notifications: boolean | null
           full_name: string | null
+          gender: string | null
           gst_number: string | null
           id: string
+          is_email_verified: boolean | null
+          is_phone_verified: boolean | null
           language: string | null
           phone: string | null
           profile_picture_url: string | null
@@ -211,10 +281,14 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           date_format?: string | null
+          date_of_birth?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
+          gender?: string | null
           gst_number?: string | null
           id: string
+          is_email_verified?: boolean | null
+          is_phone_verified?: boolean | null
           language?: string | null
           phone?: string | null
           profile_picture_url?: string | null
@@ -230,10 +304,14 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           date_format?: string | null
+          date_of_birth?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
+          gender?: string | null
           gst_number?: string | null
           id?: string
+          is_email_verified?: boolean | null
+          is_phone_verified?: boolean | null
           language?: string | null
           phone?: string | null
           profile_picture_url?: string | null
@@ -241,6 +319,36 @@ export type Database = {
           sms_notifications?: boolean | null
           timezone?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      security_logs: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -373,6 +481,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      two_factor_auth: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string | null
+          id: string
+          is_enabled: boolean | null
+          secret: string
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          secret: string
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          secret?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          date_format: string | null
+          id: string
+          language: string | null
+          number_format: string | null
+          timezone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          date_format?: string | null
+          id?: string
+          language?: string | null
+          number_format?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          date_format?: string | null
+          id?: string
+          language?: string | null
+          number_format?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          device_info: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string | null
+          is_active: boolean | null
+          last_activity: string | null
+          location: string | null
+          session_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          location?: string | null
+          session_token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          location?: string | null
+          session_token?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

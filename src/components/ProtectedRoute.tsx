@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { AuthPage } from "@/components/AuthPage";
+import { EnhancedAuthPage } from "@/components/auth/EnhancedAuthPage";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -20,7 +20,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         try {
           const { data, error } = await supabase
             .from('profiles')
-            .select('full_name, company_name')
+            .select('full_name')
             .eq('id', user.id)
             .single();
 
@@ -29,7 +29,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           }
 
           // Show onboarding if profile is incomplete
-          const hasBasicInfo = data?.full_name && data?.company_name;
+          const hasBasicInfo = data?.full_name;
           setShowOnboarding(!hasBasicInfo);
         } catch (error) {
           console.error('Error checking profile:', error);
@@ -56,7 +56,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!user) {
-    return <AuthPage />;
+    return <EnhancedAuthPage />;
   }
 
   if (showOnboarding) {

@@ -1,11 +1,11 @@
 
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { ProfileSettings } from "@/components/ProfileSettings";
+import { ComprehensiveProfileSettings } from "@/components/profile/ComprehensiveProfileSettings";
 
 const Profile = () => {
   return (
     <DashboardLayout>
-      <ProfileSettings />
+      <ComprehensiveProfileSettings />
     </DashboardLayout>
   );
 };
