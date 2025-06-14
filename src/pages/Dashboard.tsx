@@ -45,8 +45,7 @@ const Dashboard = () => {
         } else {
           acc.push({
             name: transaction.category,
-            value: transaction.amount,
-            color: ['#FF6B9D', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3'][acc.length % 6]
+            value: transaction.amount
           });
         }
         return acc;
@@ -66,7 +65,8 @@ const Dashboard = () => {
     console.log('Refreshing dashboard data...');
   };
 
-  const COLORS = ['#FF6B9D', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3'];
+  // Modern color palette
+  const COLORS = ['#FF6B9D', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -76,7 +76,7 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  // Custom tooltip component
+  // Enhanced tooltip component
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -84,7 +84,7 @@ const Dashboard = () => {
       const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : '0';
       
       return (
-        <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-lg backdrop-blur-sm">
+        <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-xl backdrop-blur-sm">
           <p className="font-semibold text-gray-900 mb-2">{data.name}</p>
           <div className="space-y-1">
             <div className="flex justify-between items-center">
@@ -138,86 +138,111 @@ const Dashboard = () => {
           {/* Left Column - Modern Pie Chart */}
           <div className="lg:col-span-2">
             <Card className="shadow-sm border-gray-100 rounded-2xl bg-white overflow-hidden">
-              <CardHeader className="pb-4">
+              <CardHeader className="pb-6">
                 <CardTitle className="text-2xl font-bold text-gray-800">Expenses by Category</CardTitle>
               </CardHeader>
               <CardContent className="p-8">
                 {dashboardData.categoryData.length > 0 ? (
-                  <div className="relative">
-                    {/* Pie Chart Container */}
-                    <div className="flex items-center justify-center mb-8">
-                      <div className="relative w-80 h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={dashboardData.categoryData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={80}
-                              outerRadius={140}
-                              paddingAngle={2}
-                              dataKey="value"
-                              animationBegin={0}
-                              animationDuration={1000}
-                              strokeWidth={0}
-                            >
-                              {dashboardData.categoryData.map((entry, index) => (
-                                <Cell 
-                                  key={`cell-${index}`} 
-                                  fill={COLORS[index % COLORS.length]}
-                                  className="hover:opacity-80 transition-opacity duration-200"
-                                />
-                              ))}
-                            </Pie>
-                            <Tooltip content={<CustomTooltip />} />
-                          </PieChart>
-                        </ResponsiveContainer>
+                  <div className="bg-white">
+                    {/* Main Chart Container */}
+                    <div className="flex flex-col lg:flex-row items-center justify-center space-y-8 lg:space-y-0 lg:space-x-12">
+                      {/* Pie Chart */}
+                      <div className="relative">
+                        <div className="w-80 h-80 relative">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={dashboardData.categoryData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={120}
+                                paddingAngle={2}
+                                dataKey="value"
+                                animationBegin={0}
+                                animationDuration={1000}
+                                strokeWidth={3}
+                                stroke="#ffffff"
+                              >
+                                {dashboardData.categoryData.map((entry, index) => (
+                                  <Cell 
+                                    key={`cell-${index}`} 
+                                    fill={COLORS[index % COLORS.length]}
+                                    className="hover:opacity-80 transition-opacity duration-300 drop-shadow-sm"
+                                  />
+                                ))}
+                              </Pie>
+                              <Tooltip content={<CustomTooltip />} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          
+                          {/* Center Label - Largest Category */}
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="text-center">
+                              {dashboardData.categoryData.length > 0 && (
+                                <>
+                                  <div className="text-xl font-bold text-gray-900 mb-1">
+                                    {dashboardData.categoryData.sort((a, b) => b.value - a.value)[0]?.name}
+                                  </div>
+                                  <div className="text-sm text-gray-500 font-medium">
+                                    {formatCurrency(dashboardData.categoryData.sort((a, b) => b.value - a.value)[0]?.value)}
+                                  </div>
+                                  <div className="text-xs text-gray-400 mt-1">
+                                    ({((dashboardData.categoryData.sort((a, b) => b.value - a.value)[0]?.value / dashboardData.monthlyExpenses) * 100).toFixed(1)}%)
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                         
-                        {/* Center Content */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="text-center">
-                            <div className="text-3xl font-bold text-gray-900 mb-1">
+                        {/* Amount Display */}
+                        <div className="absolute -top-4 -right-4 bg-white rounded-lg shadow-lg p-3 border border-gray-200">
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-gray-900">
                               {formatCurrency(dashboardData.monthlyExpenses)}
                             </div>
-                            <div className="text-sm text-gray-500 font-medium">Total Expenses</div>
+                            <div className="text-xs text-gray-500">Total Expenses</div>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Legend */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {dashboardData.categoryData
-                        .sort((a, b) => b.value - a.value)
-                        .map((category, index) => {
-                          const total = dashboardData.categoryData.reduce((sum, item) => sum + item.value, 0);
-                          const percentage = total > 0 ? ((category.value / total) * 100).toFixed(1) : '0';
-                          
-                          return (
-                            <div 
-                              key={category.name}
-                              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                            >
+                    {/* Enhanced Legend */}
+                    <div className="mt-12">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {dashboardData.categoryData
+                          .sort((a, b) => b.value - a.value)
+                          .map((category, index) => {
+                            const percentage = dashboardData.monthlyExpenses > 0 ? 
+                              ((category.value / dashboardData.monthlyExpenses) * 100).toFixed(1) : '0';
+                            
+                            return (
                               <div 
-                                className="w-4 h-4 rounded-full shadow-sm flex-shrink-0" 
-                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                              />
-                              <div className="min-w-0 flex-1">
-                                <div className="font-semibold text-gray-900 text-sm truncate">
-                                  {category.name}
-                                </div>
-                                <div className="flex items-center justify-between mt-1">
-                                  <span className="text-xs text-gray-500 font-medium">
-                                    {percentage}%
-                                  </span>
-                                  <span className="text-xs font-bold text-gray-700">
-                                    {formatCurrency(category.value)}
-                                  </span>
+                                key={category.name}
+                                className="flex items-center space-x-3 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                              >
+                                <div 
+                                  className="w-4 h-4 rounded-full shadow-sm flex-shrink-0" 
+                                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-semibold text-gray-900 text-sm truncate">
+                                    {category.name}
+                                  </div>
+                                  <div className="flex items-center justify-between mt-1">
+                                    <span className="text-xs text-gray-500 font-medium">
+                                      {percentage}%
+                                    </span>
+                                    <span className="text-xs font-bold text-gray-700">
+                                      {formatCurrency(category.value)}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                      </div>
                     </div>
                   </div>
                 ) : (
