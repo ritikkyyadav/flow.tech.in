@@ -4,6 +4,7 @@ import { FinancialOverviewCards } from "@/components/dashboard/FinancialOverview
 import { RecentTransactionsPanel } from "@/components/dashboard/RecentTransactionsPanel";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { CustomPieChart } from "@/components/dashboard/CustomPieChart";
+import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useMemo } from "react";
 
@@ -18,7 +19,8 @@ const Dashboard = () => {
         monthlyExpenses: 0,
         savingsRate: 0,
         recentTransactions: [],
-        categoryData: []
+        categoryData: [],
+        incomeExpenseData: []
       };
     }
 
@@ -50,13 +52,36 @@ const Dashboard = () => {
         return acc;
       }, []);
 
+    // Create monthly income/expense data for line chart
+    const monthlyData = transactions.reduce((acc: any, transaction) => {
+      const date = new Date(transaction.transaction_date);
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      
+      if (!acc[monthKey]) {
+        acc[monthKey] = { month: monthKey, income: 0, expenses: 0 };
+      }
+      
+      if (transaction.type === 'income') {
+        acc[monthKey].income += transaction.amount;
+      } else {
+        acc[monthKey].expenses += transaction.amount;
+      }
+      
+      return acc;
+    }, {});
+
+    const incomeExpenseData = Object.values(monthlyData)
+      .sort((a: any, b: any) => new Date(a.month).getTime() - new Date(b.month).getTime())
+      .slice(-6); // Last 6 months
+
     return {
       balance,
       monthlyIncome: income,
       monthlyExpenses: expenses,
       savingsRate,
       recentTransactions: transactions.slice(0, 5),
-      categoryData
+      categoryData,
+      incomeExpenseData
     };
   }, [transactions, loading]);
 
@@ -88,6 +113,15 @@ const Dashboard = () => {
             monthlyExpenses={dashboardData.monthlyExpenses}
             savingsRate={dashboardData.savingsRate}
             onRefresh={handleRefresh}
+          />
+        </div>
+
+        {/* Income vs Expense Chart */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+          <IncomeExpenseChart 
+            data={dashboardData.incomeExpenseData}
+            loading={loading}
+            className="border-0 shadow-none"
           />
         </div>
 

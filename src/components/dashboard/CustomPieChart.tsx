@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
@@ -54,27 +53,13 @@ export const CustomPieChart = ({ data = [], className }: CustomPieChartProps) =>
     .sort((a, b) => b.value - a.value)
     .slice(0, 6);
 
-  // Calculate percentages and angles
+  // Calculate percentages and create chart data
   const chartData = sortedData.map((item, index) => {
     const percentage = totalExpenses > 0 ? (item.value / totalExpenses) * 100 : 0;
-    const angle = (percentage / 100) * 360;
     return {
       ...item,
       percentage: percentage.toFixed(1),
-      angle,
       color: getColorForIndex(index)
-    };
-  });
-
-  // Calculate cumulative angles for positioning
-  let cumulativeAngle = 0;
-  const slices = chartData.map((item, index) => {
-    const startAngle = cumulativeAngle;
-    cumulativeAngle += item.angle;
-    return {
-      ...item,
-      startAngle,
-      rotation: startAngle
     };
   });
 
@@ -92,89 +77,57 @@ export const CustomPieChart = ({ data = [], className }: CustomPieChartProps) =>
           {/* Pie Chart Container */}
           <div className="relative mb-8">
             <div className="pie-chart-container relative">
-              <svg width="300" height="300" className="transform -rotate-90">
-                {slices.map((slice, index) => {
-                  const radius = 120;
-                  const centerX = 150;
-                  const centerY = 150;
-                  const startAngleRad = (slice.startAngle * Math.PI) / 180;
-                  const endAngleRad = ((slice.startAngle + slice.angle) * Math.PI) / 180;
+              <div className="pie-chart">
+                {chartData.map((slice, index) => {
+                  const rotation = chartData
+                    .slice(0, index)
+                    .reduce((sum, item) => sum + (parseFloat(item.percentage) * 3.6), 0);
                   
-                  const x1 = centerX + radius * Math.cos(startAngleRad);
-                  const y1 = centerY + radius * Math.sin(startAngleRad);
-                  const x2 = centerX + radius * Math.cos(endAngleRad);
-                  const y2 = centerY + radius * Math.sin(endAngleRad);
-                  
-                  const largeArcFlag = slice.angle > 180 ? 1 : 0;
-                  
-                  const pathData = [
-                    `M ${centerX} ${centerY}`,
-                    `L ${x1} ${y1}`,
-                    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-                    'Z'
-                  ].join(' ');
-
                   return (
-                    <path
+                    <div
                       key={slice.name}
-                      d={pathData}
-                      fill={slice.color}
-                      className={`transition-all duration-300 hover:scale-105 cursor-pointer ${
-                        isVisible ? 'animate-fade-in' : 'opacity-0'
-                      }`}
+                      className={`slice slice${index + 1}`}
                       style={{
-                        animationDelay: `${index * 0.2}s`,
-                        transformOrigin: '150px 150px'
-                      }}
-                    />
+                        '--rotation': `${rotation}deg`,
+                        '--percentage': `${parseFloat(slice.percentage) * 3.6}deg`,
+                        '--color': slice.color,
+                        animationDelay: `${index * 0.2}s`
+                      } as React.CSSProperties}
+                    >
+                      <div className="slice-inner"></div>
+                    </div>
                   );
                 })}
-              </svg>
-              
-              {/* Center Circle */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg border">
-                <div className="text-center">
-                  <div className="text-sm font-semibold text-gray-700 truncate px-2">
-                    {largestCategory?.name}
-                  </div>
+                <div className="chart-center">
+                  {largestCategory?.name}
                 </div>
               </div>
-            </div>
-            
-            {/* Amount Display */}
-            <div className="absolute -top-8 -right-8 bg-white rounded-full px-4 py-3 shadow-lg border">
-              <div className="text-center">
-                <p className="text-lg font-bold text-gray-900 mb-0">
-                  {formatCurrency(totalExpenses)}
-                </p>
-                <p className="text-xs text-pink-500 mb-0">
-                  ({largestCategory?.percentage}%)
-                </p>
+              
+              {/* Amount Display */}
+              <div className="amount-display">
+                <p className="amount">{formatCurrency(totalExpenses)}</p>
+                <p className="percentage">({largestCategory?.percentage}%)</p>
               </div>
             </div>
           </div>
 
           {/* Legend */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-lg">
+          <div className="legend">
             {chartData.map((category, index) => (
               <div 
                 key={category.name}
-                className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 ${
+                className={`legend-item ${
                   isVisible ? 'animate-fade-in' : 'opacity-0'
                 }`}
                 style={{ animationDelay: `${2 + index * 0.2}s` }}
               >
                 <div 
-                  className="w-4 h-4 rounded-sm flex-shrink-0 transition-transform duration-300 hover:scale-110" 
+                  className="legend-color" 
                   style={{ backgroundColor: category.color }}
                 />
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-gray-900 text-sm truncate">
-                    {category.name}
-                  </div>
-                  <div className="text-xs text-gray-500 font-medium">
-                    {formatCurrency(category.value)}
-                  </div>
+                <div className="legend-content">
+                  <div className="legend-text">{category.name}</div>
+                  <div className="legend-amount">{formatCurrency(category.value)}</div>
                 </div>
               </div>
             ))}
@@ -182,20 +135,195 @@ export const CustomPieChart = ({ data = [], className }: CustomPieChartProps) =>
         </div>
       </CardContent>
       
-      <style jsx>{`
-        @keyframes fade-in {
+      <style>{`
+        .pie-chart {
+          width: 300px;
+          height: 300px;
+          border-radius: 50%;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .slice {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          clip: rect(0px, 150px, 300px, 0px);
+          animation: slideIn 1.5s ease-out forwards;
+          transform-origin: center;
+          opacity: 0;
+          transform: rotate(var(--rotation)) scale(0);
+          transition: transform 0.3s ease;
+          cursor: pointer;
+        }
+
+        .slice:hover {
+          transform: rotate(var(--rotation)) scale(1.05);
+          z-index: 5;
+        }
+
+        .slice-inner {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          clip: rect(0px, 150px, 300px, 0px);
+          transform-origin: center;
+          background: var(--color);
+          transform: rotate(var(--percentage));
+        }
+
+        .chart-center {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 120px;
+          height: 120px;
+          background: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          font-weight: 600;
+          color: #666;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          z-index: 10;
+          opacity: 0;
+          animation: fadeIn 1s ease-out 1.5s forwards;
+        }
+
+        .amount-display {
+          position: absolute;
+          top: -60px;
+          right: -80px;
+          background: white;
+          padding: 10px 15px;
+          border-radius: 25px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+          opacity: 0;
+          animation: slideInRight 1s ease-out 2s forwards;
+        }
+
+        .amount {
+          font-size: 20px;
+          font-weight: 700;
+          color: #333;
+          margin: 0;
+        }
+
+        .percentage {
+          font-size: 14px;
+          color: #FF6B9D;
+          margin: 0;
+        }
+
+        .legend {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+          width: 100%;
+          max-width: 600px;
+        }
+
+        .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px;
+          border-radius: 8px;
+          transition: background-color 0.2s ease;
+          opacity: 0;
+        }
+
+        .legend-item:hover {
+          background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .legend-color {
+          width: 16px;
+          height: 16px;
+          border-radius: 3px;
+          transition: transform 0.3s ease;
+          flex-shrink: 0;
+        }
+
+        .legend-item:hover .legend-color {
+          transform: scale(1.2);
+        }
+
+        .legend-content {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+
+        .legend-text {
+          font-size: 14px;
+          color: #666;
+          font-weight: 500;
+          margin-bottom: 2px;
+        }
+
+        .legend-amount {
+          font-size: 12px;
+          color: #999;
+          font-weight: 400;
+        }
+
+        @keyframes slideIn {
+          from {
+            transform: rotate(var(--rotation)) scale(0);
+            opacity: 0;
+          }
+          to {
+            transform: rotate(var(--rotation)) scale(1);
+            opacity: 1;
+          }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideInRight {
           from {
             opacity: 0;
-            transform: scale(0.8);
+            transform: translateX(-20px);
           }
           to {
             opacity: 1;
-            transform: scale(1);
+            transform: translateX(0);
           }
         }
-        
+
         .animate-fade-in {
-          animation: fade-in 0.8s ease-out forwards;
+          animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @media (max-width: 600px) {
+          .pie-chart {
+            width: 250px;
+            height: 250px;
+          }
+          
+          .legend {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+          
+          .amount-display {
+            top: -50px;
+            right: -60px;
+            padding: 8px 12px;
+          }
+          
+          .amount {
+            font-size: 16px;
+          }
         }
       `}</style>
     </Card>
