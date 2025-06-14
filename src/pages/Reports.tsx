@@ -1,12 +1,18 @@
 
 import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
-import { BusinessAnalytics } from "@/components/BusinessAnalytics";
+import { FinancialReports } from "@/components/reports/FinancialReports";
 
 const Reports = () => {
   return (
-    <ResponsiveLayout title="Reports" activeTab="reports">
+    <ResponsiveLayout title="Financial Reports" activeTab="reports">
       <div className="p-4 lg:p-6 space-y-6">
-        <BusinessAnalytics />
+        <div className="print:hidden">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Financial Reports</h1>
+          <p className="text-gray-600">
+            Comprehensive financial analysis and reporting for your business
+          </p>
+        </div>
+        <FinancialReports />
       </div>
     </ResponsiveLayout>
   );
