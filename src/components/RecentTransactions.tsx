@@ -185,6 +185,16 @@ export const RecentTransactions = ({ refreshTrigger, filterType = 'all' }: Recen
     return similar.length > 0;
   };
 
+  const handleTypeFilterChange = (value: string) => {
+    if (value === 'all' || value === 'income' || value === 'expense') {
+      setTypeFilter(value);
+    }
+  };
+
+  const handleCategoryFilterChange = (value: string) => {
+    setCategoryFilter(value);
+  };
+
   if (loading) {
     return (
       <Card className="border border-gray-200">
@@ -236,7 +246,7 @@ export const RecentTransactions = ({ refreshTrigger, filterType = 'all' }: Recen
               </div>
             </div>
             
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
@@ -247,7 +257,7 @@ export const RecentTransactions = ({ refreshTrigger, filterType = 'all' }: Recen
               </SelectContent>
             </Select>
 
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
