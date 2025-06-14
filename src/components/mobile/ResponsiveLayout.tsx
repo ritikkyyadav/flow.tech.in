@@ -17,6 +17,8 @@ interface ResponsiveLayoutProps {
   onNotifications?: () => void;
   headerActions?: ReactNode;
   className?: string;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 export const ResponsiveLayout = ({
@@ -29,13 +31,15 @@ export const ResponsiveLayout = ({
   showNotifications,
   onNotifications,
   headerActions,
-  className
+  className,
+  activeTab,
+  onTabChange
 }: ResponsiveLayoutProps) => {
   const isMobile = useIsMobile();
 
   if (!isMobile) {
     return (
-      <DashboardLayout>
+      <DashboardLayout activeTab={activeTab} onTabChange={onTabChange}>
         {children}
       </DashboardLayout>
     );
@@ -61,7 +65,7 @@ export const ResponsiveLayout = ({
         {children}
       </main>
       
-      <BottomNavigation />
+      <BottomNavigation activeTab={activeTab} onTabChange={onTabChange} />
     </div>
   );
 };

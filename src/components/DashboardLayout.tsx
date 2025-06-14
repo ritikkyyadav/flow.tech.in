@@ -12,25 +12,34 @@ import {
   Plus,
   MessageSquare,
   LogOut,
-  Home
+  Home,
+  BarChart3
 } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange }: DashboardLayoutProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { user, signOut } = useAuth();
 
   const menuItems = [
-    { icon: Home, label: "Dashboard", href: "/", active: true },
-    { icon: TrendingUp, label: "Transactions", href: "/transactions" },
-    { icon: FileText, label: "Invoices", href: "/invoices" },
-    { icon: List, label: "Reports", href: "/reports" },
-    { icon: User, label: "Profile", href: "/profile" },
-    { icon: Settings, label: "Settings", href: "/settings" },
+    { id: "dashboard", icon: Home, label: "Dashboard", active: activeTab === "dashboard" },
+    { id: "transactions", icon: TrendingUp, label: "Transactions", active: activeTab === "transactions" },
+    { id: "invoices", icon: FileText, label: "Invoices", active: activeTab === "invoices" },
+    { id: "reports", icon: BarChart3, label: "Reports", active: activeTab === "reports" },
+    { id: "profile", icon: User, label: "Profile", active: activeTab === "profile" },
+    { id: "settings", icon: Settings, label: "Settings", active: activeTab === "settings" },
   ];
+
+  const handleMenuClick = (itemId: string) => {
+    if (onTabChange) {
+      onTabChange(itemId);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -76,6 +85,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     item.active && "bg-gray-800",
                     isSidebarCollapsed && "px-2"
                   )}
+                  onClick={() => handleMenuClick(item.id)}
                 >
                   <item.icon className="w-5 h-5" />
                   {!isSidebarCollapsed && (
@@ -130,17 +140,26 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <List className="w-5 h-5" />
               </Button>
               <div>
-                <h2 className="text-2xl font-bold text-black">Dashboard</h2>
+                <h2 className="text-2xl font-bold text-black">
+                  {menuItems.find(item => item.active)?.label || "Dashboard"}
+                </h2>
                 <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-3">
-              <Button className="bg-black text-white hover:bg-gray-800">
+              <Button 
+                className="bg-black text-white hover:bg-gray-800"
+                onClick={() => handleMenuClick('add-transaction')}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Quick Add
               </Button>
-              <Button variant="outline" className="border-gray-300">
+              <Button 
+                variant="outline" 
+                className="border-gray-300"
+                onClick={() => handleMenuClick('ai-assistant')}
+              >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 AI Assistant
               </Button>
