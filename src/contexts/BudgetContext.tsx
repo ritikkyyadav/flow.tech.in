@@ -55,18 +55,14 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { user, loading: authLoading } = useAuth();
 
   const refreshBudgets = async () => {
-    // Don't fetch if auth is still loading or user is not available
-    if (authLoading || !user) {
-      console.log('Skipping budget fetch - authLoading:', authLoading, 'user:', !!user);
+    if (!user) {
       setBudgets([]);
       setAlerts([]);
-      setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      console.log('Fetching budgets for user:', user.id);
       
       // Fetch budgets
       const { data: budgetData, error: budgetError } = await supabase
@@ -78,10 +74,11 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (budgetError) {
         console.error('Budget fetch error:', budgetError);
-        throw budgetError;
+        toast.error('Failed to load budgets');
+        setBudgets([]);
+      } else {
+        setBudgets(budgetData || []);
       }
-
-      console.log('Fetched budgets:', budgetData?.length || 0);
 
       // Fetch alerts
       const { data: alertData, error: alertError } = await supabase
@@ -96,10 +93,8 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       } else {
         setAlerts(alertData || []);
       }
-
-      setBudgets(budgetData || []);
     } catch (error) {
-      console.error('Error fetching budgets:', error);
+      console.error('Error fetching budget data:', error);
       toast.error('Failed to load budget data');
       setBudgets([]);
       setAlerts([]);
@@ -115,13 +110,12 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     try {
-      console.log('Creating budget:', budgetData);
+      setLoading(true);
       const { error } = await supabase
         .from('budgets')
         .insert([{ ...budgetData, user_id: user.id }]);
 
       if (error) {
-        console.error('Budget creation error:', error);
         throw error;
       }
 
@@ -130,19 +124,20 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       console.error('Error creating budget:', error);
       toast.error('Failed to create budget');
+    } finally {
+      setLoading(false);
     }
   };
 
   const updateBudget = async (id: string, updates: Partial<Budget>) => {
     try {
-      console.log('Updating budget:', id, updates);
+      setLoading(true);
       const { error } = await supabase
         .from('budgets')
         .update(updates)
         .eq('id', id);
 
       if (error) {
-        console.error('Budget update error:', error);
         throw error;
       }
 
@@ -151,19 +146,20 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       console.error('Error updating budget:', error);
       toast.error('Failed to update budget');
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteBudget = async (id: string) => {
     try {
-      console.log('Deleting budget:', id);
+      setLoading(true);
       const { error } = await supabase
         .from('budgets')
         .update({ is_active: false })
         .eq('id', id);
 
       if (error) {
-        console.error('Budget deletion error:', error);
         throw error;
       }
 
@@ -172,18 +168,21 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       console.error('Error deleting budget:', error);
       toast.error('Failed to delete budget');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Only run effect when auth finishes loading and user state changes
+  // Only fetch budgets when user is available and auth is not loading
   useEffect(() => {
-    console.log('BudgetProvider useEffect triggered - authLoading:', authLoading, 'user:', user?.id);
-    
-    // Only fetch when auth is done loading
-    if (!authLoading) {
+    if (!authLoading && user) {
       refreshBudgets();
+    } else if (!authLoading && !user) {
+      setBudgets([]);
+      setAlerts([]);
+      setLoading(false);
     }
-  }, [authLoading, user?.id]);
+  }, [user?.id, authLoading]);
 
   return (
     <BudgetContext.Provider

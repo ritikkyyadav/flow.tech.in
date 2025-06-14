@@ -9,8 +9,10 @@ import { useBudgets } from '@/contexts/BudgetContext';
 import { useTransactions } from '@/contexts/TransactionContext';
 
 export const BudgetOverview = () => {
-  const { budgets, loading } = useBudgets();
-  const { transactions } = useTransactions();
+  const { budgets, loading: budgetLoading } = useBudgets();
+  const { transactions, loading: transactionLoading } = useTransactions();
+
+  const loading = budgetLoading || transactionLoading;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -22,9 +24,7 @@ export const BudgetOverview = () => {
   };
 
   const budgetData = useMemo(() => {
-    if (!budgets || !transactions) return [];
-
-    console.log('Computing budget data with budgets:', budgets.length, 'transactions:', transactions.length);
+    if (loading || !budgets || !transactions) return [];
 
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
@@ -64,7 +64,7 @@ export const BudgetOverview = () => {
         daysLeftInMonth
       };
     });
-  }, [budgets, transactions]);
+  }, [budgets, transactions, loading]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -97,7 +97,7 @@ export const BudgetOverview = () => {
     );
   }
 
-  if (budgetData.length === 0) {
+  if (!budgets || budgets.length === 0) {
     return (
       <Card>
         <CardHeader>
