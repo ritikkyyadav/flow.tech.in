@@ -10,7 +10,7 @@ interface DualAxisChartProps {
   className?: string;
 }
 
-export const DualAxisChart = ({ data, className }: DualAxisChartProps) => {
+export const DualAxisChart = ({ data = [], className }: DualAxisChartProps) => {
   const [period, setPeriod] = useState('12months');
   const [chartType, setChartType] = useState('line');
 
@@ -22,6 +22,16 @@ export const DualAxisChart = ({ data, className }: DualAxisChartProps) => {
       maximumFractionDigits: 0,
     }).format(amount);
   };
+
+  // Provide default data if no data is available
+  const chartData = data.length > 0 ? data : [
+    { monthName: 'Jan', income: 50000, expenses: 30000, net: 20000 },
+    { monthName: 'Feb', income: 55000, expenses: 32000, net: 23000 },
+    { monthName: 'Mar', income: 48000, expenses: 28000, net: 20000 },
+    { monthName: 'Apr', income: 52000, expenses: 31000, net: 21000 },
+    { monthName: 'May', income: 58000, expenses: 35000, net: 23000 },
+    { monthName: 'Jun', income: 60000, expenses: 38000, net: 22000 }
+  ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -79,7 +89,7 @@ export const DualAxisChart = ({ data, className }: DualAxisChartProps) => {
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
           {chartType === 'line' ? (
-            <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis 
                 dataKey="monthName" 
@@ -122,7 +132,7 @@ export const DualAxisChart = ({ data, className }: DualAxisChartProps) => {
               />
             </LineChart>
           ) : (
-            <ComposedChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis 
                 dataKey="monthName" 

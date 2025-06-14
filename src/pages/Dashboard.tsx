@@ -10,6 +10,10 @@ import { RecentTransactionsPanel } from "@/components/dashboard/RecentTransactio
 import { AIInsightsWidget } from "@/components/dashboard/AIInsightsWidget";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { AdvancedFiltering } from "@/components/dashboard/AdvancedFiltering";
+import { TransactionModal } from "@/components/TransactionModal";
+import { AIChatAssistant } from "@/components/AIChatAssistant";
+import { Button } from "@/components/ui/button";
+import { Plus, MessageSquare } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -40,6 +44,8 @@ const Dashboard = () => {
     categories: [],
     transactionType: 'all'
   });
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -135,9 +141,46 @@ const Dashboard = () => {
     setFilterOptions(newFilters);
   };
 
+  const handleQuickAdd = () => {
+    setShowTransactionModal(true);
+  };
+
+  const handleAIAssistant = () => {
+    setShowAIAssistant(true);
+  };
+
+  const handleTransactionSaved = () => {
+    fetchDashboardData(); // Refresh data after adding transaction
+    setShowTransactionModal(false);
+  };
+
   if (loading) {
     return (
-      <ResponsiveLayout title="Dashboard" activeTab="dashboard">
+      <ResponsiveLayout 
+        title="Dashboard" 
+        activeTab="dashboard"
+        headerActions={
+          <div className="flex space-x-2">
+            <Button 
+              size="sm" 
+              onClick={handleQuickAdd}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Quick Add
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleAIAssistant}
+              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              <MessageSquare className="w-4 h-4 mr-1" />
+              AI Assistant
+            </Button>
+          </div>
+        }
+      >
         <div className="p-4 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
@@ -153,68 +196,108 @@ const Dashboard = () => {
   }
 
   return (
-    <ResponsiveLayout title="Dashboard" activeTab="dashboard">
-      <div className="min-h-screen bg-gray-50">
-        {/* Advanced Filtering */}
-        <div className="bg-white border-b border-gray-200 p-4">
-          <AdvancedFiltering onFilterChange={handleFilterChange} />
-        </div>
-
-        <div className="p-4 lg:p-6 space-y-6 lg:space-y-8">
-          {/* Financial Overview Cards */}
-          <FinancialOverviewCards 
-            balance={dashboardData.balance}
-            monthlyIncome={dashboardData.monthlyIncome}
-            monthlyExpenses={dashboardData.monthlyExpenses}
-            savingsRate={dashboardData.savingsRate}
-            onRefresh={fetchDashboardData}
-          />
-
-          {/* Primary Analytics Section */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-            <DualAxisChart 
-              data={dashboardData.monthlyTrends}
-              className="bg-gray-50 rounded-lg border border-gray-200"
-            />
-            <WaterfallChart 
-              data={dashboardData}
-              className="bg-gray-50 rounded-lg border border-gray-200"
-            />
+    <>
+      <ResponsiveLayout 
+        title="Dashboard" 
+        activeTab="dashboard"
+        headerActions={
+          <div className="flex space-x-2">
+            <Button 
+              size="sm" 
+              onClick={handleQuickAdd}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Quick Add
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleAIAssistant}
+              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              <MessageSquare className="w-4 h-4 mr-1" />
+              AI Assistant
+            </Button>
+          </div>
+        }
+      >
+        <div className="min-h-screen bg-gray-50">
+          {/* Advanced Filtering */}
+          <div className="bg-white border-b border-gray-200 p-4">
+            <AdvancedFiltering onFilterChange={handleFilterChange} />
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-            <InteractivePieChart 
-              data={dashboardData.categoryData}
-              className="bg-white rounded-lg border border-gray-200"
+          <div className="p-4 lg:p-6 space-y-6 lg:space-y-8">
+            {/* Financial Overview Cards */}
+            <FinancialOverviewCards 
+              balance={dashboardData.balance}
+              monthlyIncome={dashboardData.monthlyIncome}
+              monthlyExpenses={dashboardData.monthlyExpenses}
+              savingsRate={dashboardData.savingsRate}
+              onRefresh={fetchDashboardData}
             />
-            <BudgetDashboard 
-              categoryData={dashboardData.categoryData}
-              className="bg-gray-50 rounded-lg border border-gray-200"
-            />
-          </div>
 
-          {/* Secondary Analytics Section */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-            <div className="xl:col-span-2">
-              <RecentTransactionsPanel 
-                transactions={dashboardData.transactions}
-                onRefresh={fetchDashboardData}
+            {/* Primary Analytics Section */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+              <DualAxisChart 
+                data={dashboardData.monthlyTrends}
+                className="bg-gray-50 rounded-lg border border-gray-200"
+              />
+              <WaterfallChart 
+                data={dashboardData}
+                className="bg-gray-50 rounded-lg border border-gray-200"
               />
             </div>
-            <div className="space-y-6">
-              <AIInsightsWidget 
-                dashboardData={dashboardData}
-                className="bg-gray-800 text-white rounded-lg border border-gray-200"
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+              <InteractivePieChart 
+                data={dashboardData.categoryData}
+                className="bg-white rounded-lg border border-gray-200"
               />
-              <QuickActionsPanel 
-                onRefresh={fetchDashboardData}
-                className="bg-gray-900 text-white rounded-lg border border-gray-200"
+              <BudgetDashboard 
+                categoryData={dashboardData.categoryData}
+                className="bg-gray-50 rounded-lg border border-gray-200"
               />
+            </div>
+
+            {/* Secondary Analytics Section */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+              <div className="xl:col-span-2">
+                <RecentTransactionsPanel 
+                  transactions={dashboardData.transactions}
+                  onRefresh={fetchDashboardData}
+                />
+              </div>
+              <div className="space-y-6">
+                <AIInsightsWidget 
+                  dashboardData={dashboardData}
+                  className="bg-gray-800 text-white rounded-lg border border-gray-200"
+                />
+                <QuickActionsPanel 
+                  onRefresh={fetchDashboardData}
+                  className="bg-gray-900 text-white rounded-lg border border-gray-200"
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </ResponsiveLayout>
+      </ResponsiveLayout>
+
+      {/* Modals */}
+      {showTransactionModal && (
+        <TransactionModal
+          isOpen={showTransactionModal}
+          onClose={() => setShowTransactionModal(false)}
+          onSaved={handleTransactionSaved}
+        />
+      )}
+
+      <AIChatAssistant
+        isOpen={showAIAssistant}
+        onClose={() => setShowAIAssistant(false)}
+      />
+    </>
   );
 };
 

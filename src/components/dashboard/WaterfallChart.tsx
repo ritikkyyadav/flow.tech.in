@@ -9,7 +9,7 @@ interface WaterfallChartProps {
   className?: string;
 }
 
-export const WaterfallChart = ({ data, className }: WaterfallChartProps) => {
+export const WaterfallChart = ({ data = {}, className }: WaterfallChartProps) => {
   const [viewType, setViewType] = useState('monthly');
 
   const formatCurrency = (amount: number) => {
@@ -21,11 +21,11 @@ export const WaterfallChart = ({ data, className }: WaterfallChartProps) => {
     }).format(amount);
   };
 
-  // Create waterfall data structure
+  // Create waterfall data structure with defaults
   const createWaterfallData = () => {
-    const startingBalance = data.balance || 0;
-    const income = data.monthlyIncome || 0;
-    const expenses = data.monthlyExpenses || 0;
+    const startingBalance = data.balance || 25000;
+    const income = data.monthlyIncome || 50000;
+    const expenses = data.monthlyExpenses || 35000;
     const endingBalance = startingBalance + income - expenses;
 
     return [
