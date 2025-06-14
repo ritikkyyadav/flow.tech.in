@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Wallet, Target, PiggyBank, CreditCard } from "lucide-react";
@@ -80,27 +79,27 @@ export const FinancialOverview = ({ refreshTrigger }: FinancialOverviewProps) =>
       // Calculate stats
       const totalIncome = allTransactions
         ?.filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+        .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       const totalExpenses = allTransactions
         ?.filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+        .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       const monthlyIncome = currentMonthTransactions
         ?.filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+        .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       const monthlyExpenses = currentMonthTransactions
         ?.filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+        .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       const lastMonthIncome = lastMonthTransactions
         ?.filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+        .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       const lastMonthExpenses = lastMonthTransactions
         ?.filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+        .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
       const daysInMonth = now.getDate();
       const dailyAverage = monthlyExpenses / daysInMonth;

@@ -12,16 +12,57 @@ interface TransactionAnalyticsProps {
   refreshTrigger: number;
 }
 
+interface CategoryData {
+  name: string;
+  value: number;
+  type: string;
+  color: string;
+}
+
+interface MonthlyTrend {
+  month: string;
+  monthName: string;
+  income: number;
+  expense: number;
+  net: number;
+}
+
+interface SpendingPatterns {
+  avgDailySpending: number;
+  highestSpendingDay: string;
+  mostFrequentCategory: string;
+  largestTransaction: number;
+}
+
+interface AnalyticsData {
+  categoryData: {
+    expense: CategoryData[];
+    income: CategoryData[];
+  };
+  monthlyTrends: MonthlyTrend[];
+  incomeVsExpense: MonthlyTrend[];
+  topExpenses: CategoryData[];
+  patterns: SpendingPatterns;
+}
+
 export const TransactionAnalytics = ({ refreshTrigger }: TransactionAnalyticsProps) => {
   const { user } = useAuth();
   const [timeframe, setTimeframe] = useState('last6months');
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({
-    categoryData: [],
+  const [data, setData] = useState<AnalyticsData>({
+    categoryData: {
+      expense: [],
+      income: []
+    },
     monthlyTrends: [],
     incomeVsExpense: [],
     topExpenses: [],
-    patterns: {}
+    patterns: {
+      avgDailySpending: 0,
+      highestSpendingDay: '',
+      mostFrequentCategory: '',
+      largestTransaction: 0
+    }
   });
 
   useEffect(() => {
@@ -75,17 +116,17 @@ export const TransactionAnalytics = ({ refreshTrigger }: TransactionAnalyticsPro
             color: transaction.type === 'income' ? '#10B981' : '#EF4444'
           };
         }
-        acc[key].value += parseFloat(transaction.amount);
+        acc[key].value += Number(transaction.amount);
         return acc;
       }, {});
 
       const expenseCategories = Object.values(categoryTotals)
         .filter((item: any) => item.type === 'expense')
-        .sort((a: any, b: any) => b.value - a.value);
+        .sort((a: any, b: any) => b.value - a.value) as CategoryData[];
 
       const incomeCategories = Object.values(categoryTotals)
         .filter((item: any) => item.type === 'income')
-        .sort((a: any, b: any) => b.value - a.value);
+        .sort((a: any, b: any) => b.value - a.value) as CategoryData[];
 
       // Process monthly trends
       const monthlyData = transactions.reduce((acc: any, transaction: any) => {
@@ -93,7 +134,7 @@ export const TransactionAnalytics = ({ refreshTrigger }: TransactionAnalyticsPro
         if (!acc[month]) {
           acc[month] = { month, income: 0, expense: 0 };
         }
-        acc[month][transaction.type] += parseFloat(transaction.amount);
+        acc[month][transaction.type] += Number(transaction.amount);
         return acc;
       }, {});
 
@@ -104,10 +145,10 @@ export const TransactionAnalytics = ({ refreshTrigger }: TransactionAnalyticsPro
           month: 'short', 
           year: '2-digit' 
         })
-      }));
+      })) as MonthlyTrend[];
 
       // Process spending patterns
-      const patterns = {
+      const patterns: SpendingPatterns = {
         avgDailySpending: 0,
         highestSpendingDay: '',
         mostFrequentCategory: '',
@@ -116,14 +157,14 @@ export const TransactionAnalytics = ({ refreshTrigger }: TransactionAnalyticsPro
 
       if (transactions.length > 0) {
         const expenses = transactions.filter(t => t.type === 'expense');
-        const totalExpenses = expenses.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+        const totalExpenses = expenses.reduce((sum, t) => sum + Number(t.amount), 0);
         const days = Math.max(1, Math.ceil((now.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)));
         patterns.avgDailySpending = totalExpenses / days;
 
         // Find highest spending day
         const dailySpending = expenses.reduce((acc: any, transaction: any) => {
           const day = transaction.transaction_date.slice(0, 10);
-          acc[day] = (acc[day] || 0) + parseFloat(transaction.amount);
+          acc[day] = (acc[day] || 0) + Number(transaction.amount);
           return acc;
         }, {});
 
@@ -143,7 +184,7 @@ export const TransactionAnalytics = ({ refreshTrigger }: TransactionAnalyticsPro
         patterns.mostFrequentCategory = Object.entries(categoryFreq)
           .sort(([,a]: any, [,b]: any) => b - a)[0]?.[0] || '';
 
-        patterns.largestTransaction = Math.max(...transactions.map(t => parseFloat(t.amount)));
+        patterns.largestTransaction = Math.max(...transactions.map(t => Number(t.amount)));
       }
 
       setData({

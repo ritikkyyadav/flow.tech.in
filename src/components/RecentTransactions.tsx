@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,16 +15,16 @@ interface Transaction {
   type: 'income' | 'expense';
   amount: number;
   category: string;
-  subcategory?: string;
-  description: string;
+  subcategory?: string | null;
+  description: string | null;
   transaction_date: string;
-  source_client?: string;
-  vendor_merchant?: string;
-  location?: string;
-  payment_method?: string;
-  reference_number?: string;
-  is_business_related: boolean;
-  is_reimbursable: boolean;
+  source_client?: string | null;
+  vendor_merchant?: string | null;
+  location?: string | null;
+  payment_method?: string | null;
+  reference_number?: string | null;
+  is_business_related: boolean | null;
+  is_reimbursable: boolean | null;
   attachments?: any[];
 }
 
@@ -77,7 +76,7 @@ export const RecentTransactions = ({ refreshTrigger }: RecentTransactionsProps) 
         attachments: transaction.transaction_attachments || []
       })) || [];
 
-      setTransactions(transactionsWithAttachments);
+      setTransactions(transactionsWithAttachments as Transaction[]);
     } catch (error) {
       console.error('Error fetching transactions:', error);
       toast({
@@ -156,10 +155,14 @@ export const RecentTransactions = ({ refreshTrigger }: RecentTransactionsProps) 
   };
 
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const description = transaction.description || '';
+    const vendor = transaction.vendor_merchant || '';
+    const source = transaction.source_client || '';
+    
+    const matchesSearch = description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          transaction.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (transaction.vendor_merchant?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (transaction.source_client?.toLowerCase().includes(searchTerm.toLowerCase()));
+                         vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         source.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = categoryFilter === 'all' || transaction.category === categoryFilter;
     const matchesType = typeFilter === 'all' || transaction.type === typeFilter;
@@ -285,7 +288,7 @@ export const RecentTransactions = ({ refreshTrigger }: RecentTransactionsProps) 
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-black truncate">{transaction.description}</p>
+                      <p className="font-medium text-black truncate">{transaction.description || 'No description'}</p>
                       {transaction.is_business_related && (
                         <Badge variant="outline" className="text-xs">Business</Badge>
                       )}
