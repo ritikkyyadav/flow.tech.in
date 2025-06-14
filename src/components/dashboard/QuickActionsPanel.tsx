@@ -139,12 +139,16 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
       
       <CardHeader className="relative z-10">
         <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-            <Zap className="w-5 h-5" />
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <img 
+              src="/lovable-uploads/4d4cf201-07fa-4897-98db-09112d4084e5.png" 
+              alt="Withu Logo" 
+              className="w-5 h-5 object-contain filter brightness-0 invert"
+            />
           </div>
           Quick Actions
         </CardTitle>
-        <p className="text-gray-300 text-sm">Streamline your financial tasks</p>
+        <p className="text-gray-300 text-sm">Built with AI</p>
       </CardHeader>
       
       <CardContent className="space-y-6 relative z-10">
