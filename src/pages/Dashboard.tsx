@@ -52,8 +52,8 @@ const Dashboard = () => {
         return acc;
       }, []);
 
-    // Create monthly income/expense data for line chart
-    const monthlyData = transactions.reduce((acc: any, transaction) => {
+    // Create monthly income/expense data for line chart with proper typing
+    const monthlyData = transactions.reduce((acc: Record<string, { month: string; income: number; expenses: number }>, transaction) => {
       const date = new Date(transaction.transaction_date);
       const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       
@@ -71,7 +71,7 @@ const Dashboard = () => {
     }, {});
 
     const incomeExpenseData = Object.values(monthlyData)
-      .sort((a: any, b: any) => new Date(a.month).getTime() - new Date(b.month).getTime())
+      .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
       .slice(-6); // Last 6 months
 
     return {
