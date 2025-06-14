@@ -3,7 +3,7 @@ import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
 import { FinancialOverviewCards } from "@/components/dashboard/FinancialOverviewCards";
 import { RecentTransactionsPanel } from "@/components/dashboard/RecentTransactionsPanel";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
-import { CustomPieChart } from "@/components/dashboard/CustomPieChart";
+import { EnhancedCategoryChart } from "@/components/dashboard/EnhancedCategoryChart";
 import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useMemo } from "react";
@@ -127,10 +127,10 @@ const Dashboard = () => {
 
         {/* Main Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Custom Pie Chart */}
+          {/* Left Column - Enhanced Category Chart */}
           <div className="lg:col-span-2">
-            <CustomPieChart 
-              data={dashboardData.categoryData}
+            <EnhancedCategoryChart 
+              data={transactions}
               className="shadow-sm border-gray-100 rounded-2xl bg-white overflow-hidden"
             />
           </div>
