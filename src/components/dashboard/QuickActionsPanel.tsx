@@ -130,7 +130,12 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
   return (
     <Card className={cn("shadow-lg border-0 bg-gradient-to-br from-gray-900 to-black text-white overflow-hidden", className)}>
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="20" height="20" xmlns="http://www.w3.org/2000/svg"%3E%3Cdefs%3E%3Cpattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"%3E%3Cpath d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/%3E%3C/pattern%3E%3C/defs%3E%3Crect width="100%25" height="100%25" fill="url(%23grid)" /%3E%3C/svg%3E')] opacity-20" />
+      <div 
+        className="absolute inset-0 opacity-20" 
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23grid)' /%3E%3C/svg%3E")`
+        }}
+      />
       
       <CardHeader className="relative z-10">
         <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
@@ -251,7 +256,7 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
             <div className="flex-1">
               <div className="text-sm font-semibold text-blue-200 mb-1">Smart Suggestion</div>
               <div className="text-xs text-blue-100 mb-3">
-                You're spending 15% more on dining this month. Consider setting a budget limit.
+                You are spending 15% more on dining this month. Consider setting a budget limit.
               </div>
               <Button
                 size="sm"
