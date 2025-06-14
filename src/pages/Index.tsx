@@ -126,7 +126,7 @@ const Index = () => {
             </MobileGrid>
 
             {/* Secondary Analytics Section - Mobile optimized */}
-            <MobileGrid cols={isMobile ? 1 : 3}>
+            <MobileGrid cols={isMobile ? 1 : 2}>
               {/* Budget Performance */}
               <BudgetPerformance refreshTrigger={refreshTrigger} />
               
