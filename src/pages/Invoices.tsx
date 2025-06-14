@@ -1,22 +1,41 @@
 
 import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
 import { InvoiceList } from "@/components/InvoiceList";
+import { InvoiceBuilder } from "@/components/InvoiceBuilder";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { InvoiceModal } from "@/components/InvoiceModal";
 
 const Invoices = () => {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showInvoiceBuilder, setShowInvoiceBuilder] = useState(false);
 
   const handleCreateInvoice = () => {
-    setShowInvoiceModal(true);
+    setShowInvoiceBuilder(true);
   };
 
   const handleInvoiceCreated = () => {
     setShowInvoiceModal(false);
     // Refresh invoice list if needed
   };
+
+  const handleBackToList = () => {
+    setShowInvoiceBuilder(false);
+  };
+
+  if (showInvoiceBuilder) {
+    return (
+      <ResponsiveLayout 
+        title="Create Invoice" 
+        activeTab="invoices"
+        showBack={true}
+        onBack={handleBackToList}
+      >
+        <InvoiceBuilder />
+      </ResponsiveLayout>
+    );
+  }
 
   return (
     <>

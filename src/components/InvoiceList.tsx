@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -228,19 +227,7 @@ export const InvoiceList = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Invoice Management</h1>
-          <p className="text-gray-600">Track and manage all your invoices</p>
-        </div>
-        <Button>
-          <Calendar className="w-4 h-4 mr-2" />
-          Create Invoice
-        </Button>
-      </div>
-
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
