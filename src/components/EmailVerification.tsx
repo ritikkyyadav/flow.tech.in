@@ -11,9 +11,10 @@ import { Mail, ArrowLeft } from "lucide-react";
 interface EmailVerificationProps {
   email: string;
   onBack: () => void;
+  onSuccess?: () => void;
 }
 
-export const EmailVerification = ({ email, onBack }: EmailVerificationProps) => {
+export const EmailVerification = ({ email, onBack, onSuccess }: EmailVerificationProps) => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -44,6 +45,10 @@ export const EmailVerification = ({ email, onBack }: EmailVerificationProps) => 
         title: "Email verified!",
         description: "Your account has been successfully verified.",
       });
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       toast({
         title: "Verification failed",
