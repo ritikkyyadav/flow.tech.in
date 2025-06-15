@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Wallet, Target, PiggyBank, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { formatIndianCurrency } from "@/utils/indianUtils";
 
 interface FinancialOverviewProps {
   refreshTrigger: number;
@@ -124,15 +126,6 @@ export const FinancialOverview = ({ refreshTrigger }: FinancialOverviewProps) =>
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   const formatChange = (change: number) => {
     const sign = change > 0 ? '+' : '';
     return `${sign}${change.toFixed(1)}%`;
@@ -166,7 +159,7 @@ export const FinancialOverview = ({ refreshTrigger }: FinancialOverviewProps) =>
         </CardHeader>
         <CardContent>
           <div className={`text-2xl font-bold ${stats.currentBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {formatCurrency(stats.currentBalance)}
+            {formatIndianCurrency(stats.currentBalance)}
           </div>
           <p className="text-xs text-gray-500 mt-1">
             Total income minus expenses
@@ -182,7 +175,7 @@ export const FinancialOverview = ({ refreshTrigger }: FinancialOverviewProps) =>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-blue-600">
-            {formatCurrency(stats.monthlyIncome)}
+            {formatIndianCurrency(stats.monthlyIncome)}
           </div>
           <div className="flex items-center space-x-2 text-xs mt-1">
             <span className={`flex items-center ${stats.incomeChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -206,7 +199,7 @@ export const FinancialOverview = ({ refreshTrigger }: FinancialOverviewProps) =>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-orange-600">
-            {formatCurrency(stats.monthlyExpenses)}
+            {formatIndianCurrency(stats.monthlyExpenses)}
           </div>
           <div className="flex items-center space-x-2 text-xs mt-1">
             <span className={`flex items-center ${stats.expenseChange <= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -230,7 +223,7 @@ export const FinancialOverview = ({ refreshTrigger }: FinancialOverviewProps) =>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-purple-600">
-            {formatCurrency(stats.dailyAverage)}
+            {formatIndianCurrency(stats.dailyAverage)}
           </div>
           <p className="text-xs text-gray-500 mt-1">
             Average daily spending this month

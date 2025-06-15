@@ -1,8 +1,8 @@
-
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { PieChart as PieChartIcon, BarChart3 } from "lucide-react";
+import { formatIndianCurrency } from "@/utils/indianUtils";
 import type { Transaction } from "@/contexts/TransactionContext";
 
 interface SpendingCategoriesReportProps {
@@ -37,15 +37,6 @@ export const SpendingCategoriesReport = ({ transactions, dateRange, loading }: S
     '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1'
   ];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -53,7 +44,7 @@ export const SpendingCategoriesReport = ({ transactions, dateRange, loading }: S
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-semibold text-gray-900">{data.category}</p>
           <p className="text-sm text-gray-600">
-            Amount: <span className="font-medium">{formatCurrency(data.amount)}</span>
+            Amount: <span className="font-medium">{formatIndianCurrency(data.amount)}</span>
           </p>
           <p className="text-sm text-gray-600">
             Percentage: <span className="font-medium">{data.percentage.toFixed(1)}%</span>
@@ -165,7 +156,7 @@ export const SpendingCategoriesReport = ({ transactions, dateRange, loading }: S
                   width={80}
                 />
                 <Tooltip 
-                  formatter={(value: number) => [formatCurrency(value), 'Amount']}
+                  formatter={(value: number) => [formatIndianCurrency(value), 'Amount']}
                   labelStyle={{ color: '#000000' }}
                 />
                 <Bar dataKey="amount" fill="#3B82F6" radius={[0, 4, 4, 0]} />
@@ -205,7 +196,7 @@ export const SpendingCategoriesReport = ({ transactions, dateRange, loading }: S
                       </div>
                     </td>
                     <td className="py-3 px-4 text-right font-semibold text-gray-900">
-                      {formatCurrency(item.amount)}
+                      {formatIndianCurrency(item.amount)}
                     </td>
                     <td className="py-3 px-4 text-right text-gray-600">
                       {item.percentage.toFixed(1)}%

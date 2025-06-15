@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { formatIndianCurrency } from "@/utils/indianUtils";
 import type { Transaction } from "@/contexts/TransactionContext";
 
 interface ProfitLossReportProps {
@@ -36,15 +37,6 @@ export const ProfitLossReport = ({ transactions, dateRange, loading }: ProfitLos
       netProfit
     };
   }, [transactions]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const formatDateRange = () => {
     const start = new Date(dateRange.start).toLocaleDateString('en-US', { 
@@ -102,12 +94,12 @@ export const ProfitLossReport = ({ transactions, dateRange, loading }: ProfitLos
               {Object.entries(reportData.incomeByCategory).map(([category, amount]) => (
                 <div key={category} className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-700">{category}</span>
-                  <span className="font-medium text-green-600">{formatCurrency(amount)}</span>
+                  <span className="font-medium text-green-600">{formatIndianCurrency(amount)}</span>
                 </div>
               ))}
               <div className="flex justify-between items-center py-3 border-t-2 border-green-200 bg-green-50 px-2 rounded">
                 <span className="font-semibold text-green-800">Total Income</span>
-                <span className="font-bold text-green-700 text-lg">{formatCurrency(reportData.totalIncome)}</span>
+                <span className="font-bold text-green-700 text-lg">{formatIndianCurrency(reportData.totalIncome)}</span>
               </div>
             </div>
           </div>
@@ -122,12 +114,12 @@ export const ProfitLossReport = ({ transactions, dateRange, loading }: ProfitLos
               {Object.entries(reportData.expensesByCategory).map(([category, amount]) => (
                 <div key={category} className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-700">{category}</span>
-                  <span className="font-medium text-red-600">{formatCurrency(amount)}</span>
+                  <span className="font-medium text-red-600">{formatIndianCurrency(amount)}</span>
                 </div>
               ))}
               <div className="flex justify-between items-center py-3 border-t-2 border-red-200 bg-red-50 px-2 rounded">
                 <span className="font-semibold text-red-800">Total Expenses</span>
-                <span className="font-bold text-red-700 text-lg">{formatCurrency(reportData.totalExpenses)}</span>
+                <span className="font-bold text-red-700 text-lg">{formatIndianCurrency(reportData.totalExpenses)}</span>
               </div>
             </div>
           </div>
@@ -152,7 +144,7 @@ export const ProfitLossReport = ({ transactions, dateRange, loading }: ProfitLos
               <span className={`font-bold text-xl ${
                 reportData.netProfit >= 0 ? 'text-blue-700' : 'text-orange-700'
               }`}>
-                {formatCurrency(Math.abs(reportData.netProfit))}
+                {formatIndianCurrency(Math.abs(reportData.netProfit))}
               </span>
             </div>
           </div>
