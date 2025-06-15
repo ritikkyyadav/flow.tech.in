@@ -191,7 +191,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
             <div className="flex items-center space-x-3">
               <Button 
                 className="bg-black text-white hover:bg-gray-800"
-                onClick={() => handleMenuClick('add-transaction')}
+                onClick={() => handleMenuClick('transactions')}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Quick Add
@@ -199,7 +199,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
               <Button 
                 variant="outline" 
                 className="border-gray-300"
-                onClick={() => handleMenuClick('ai-assistant')}
+                onClick={() => console.log('AI Assistant clicked')}
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 AI Assistant
