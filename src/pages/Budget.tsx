@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ResponsiveLayout } from '@/components/mobile/ResponsiveLayout';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { BudgetSetupForm } from '@/components/budget/BudgetSetupForm';
 import { BudgetOverview } from '@/components/budget/BudgetOverview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -88,7 +88,7 @@ const Budget = () => {
   }, [user?.id, authLoading]);
 
   return (
-    <ResponsiveLayout title="Budget Management" activeTab="budget">
+    <DashboardLayout activeTab="budget">
       <div className="p-4 lg:p-6 space-y-6 bg-gray-50 min-h-screen">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center space-x-3 mb-6">
@@ -123,7 +123,7 @@ const Budget = () => {
           </Tabs>
         </div>
       </div>
-    </ResponsiveLayout>
+    </DashboardLayout>
   );
 };
 
