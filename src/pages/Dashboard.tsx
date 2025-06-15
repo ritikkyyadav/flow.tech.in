@@ -1,5 +1,5 @@
 
-import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { FinancialOverviewCards } from "@/components/dashboard/FinancialOverviewCards";
 import { RecentTransactionsPanel } from "@/components/dashboard/RecentTransactionsPanel";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
@@ -91,19 +91,19 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <ResponsiveLayout title="Dashboard" activeTab="dashboard">
+      <DashboardLayout activeTab="dashboard">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">Loading your dashboard...</p>
           </div>
         </div>
-      </ResponsiveLayout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <ResponsiveLayout title="Dashboard" activeTab="dashboard">
+    <DashboardLayout activeTab="dashboard">
       <div className="p-4 lg:p-6 space-y-6 bg-gray-50 min-h-screen">
         {/* Modern Financial Overview */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -149,7 +149,7 @@ const Dashboard = () => {
           />
         </div>
       </div>
-    </ResponsiveLayout>
+    </DashboardLayout>
   );
 };
 
