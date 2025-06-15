@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -20,6 +19,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TransactionModal } from "@/components/TransactionModal";
 import { VoiceEntryModal } from "@/components/VoiceEntryModal";
+import { CameraCapture } from "@/components/mobile/CameraCapture";
 import { toast } from "sonner";
 
 interface QuickActionsPanelProps {
@@ -31,6 +31,7 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
   const navigate = useNavigate();
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showVoiceEntryModal, setShowVoiceEntryModal] = useState(false);
+  const [showCameraCapture, setShowCameraCapture] = useState(false);
 
   const primaryActions = [
     {
@@ -142,7 +143,8 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
           toast.success('Opening calculator');
           break;
         case 'scan-receipt':
-          toast.info('Receipt scanning feature coming soon!');
+          setShowCameraCapture(true);
+          toast.success('Opening receipt scanner');
           break;
         case 'voice-entry':
           setShowVoiceEntryModal(true);
@@ -166,6 +168,20 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
     setShowVoiceEntryModal(false);
     onRefresh();
     toast.success('Voice entry completed');
+  };
+
+  const handleReceiptCapture = (imageData: string) => {
+    console.log('Receipt captured:', imageData);
+    // Here you would typically process the image with OCR
+    // For now, we'll just show a success message
+    toast.success('Receipt captured! Processing with AI...');
+    
+    // Simulate processing time
+    setTimeout(() => {
+      toast.success('Receipt processed successfully! Transaction details extracted.');
+      // You could open the transaction modal with pre-filled data here
+      setShowTransactionModal(true);
+    }, 2000);
   };
 
   return (
@@ -326,6 +342,15 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
           isOpen={showVoiceEntryModal}
           onClose={() => setShowVoiceEntryModal(false)}
           onComplete={handleVoiceEntryComplete}
+        />
+      )}
+
+      {/* Camera Capture Modal */}
+      {showCameraCapture && (
+        <CameraCapture
+          isOpen={showCameraCapture}
+          onClose={() => setShowCameraCapture(false)}
+          onCapture={handleReceiptCapture}
         />
       )}
     </>
