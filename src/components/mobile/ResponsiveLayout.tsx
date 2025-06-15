@@ -1,7 +1,7 @@
 
 import { MobileHeader } from "./MobileHeader";
 import { BottomNavigation } from "./BottomNavigation";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface ResponsiveLayoutProps {
@@ -12,7 +12,7 @@ interface ResponsiveLayoutProps {
 }
 
 export const ResponsiveLayout = ({ children, title, activeTab, headerActions }: ResponsiveLayoutProps) => {
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   if (isMobile) {
     return (

@@ -33,8 +33,16 @@ const Invoices = () => {
       <ResponsiveLayout 
         title="Create Invoice" 
         activeTab="invoices"
-        showBack={true}
-        onBack={handleBackToList}
+        headerActions={
+          <Button 
+            onClick={handleBackToList}
+            variant="ghost"
+            size="sm"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+        }
       >
         <InvoiceBuilder onInvoiceCreated={handleBackToList} />
       </ResponsiveLayout>
