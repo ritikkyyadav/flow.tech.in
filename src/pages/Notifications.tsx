@@ -1,5 +1,5 @@
 
-import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +7,7 @@ import { Bell, Settings } from "lucide-react";
 
 const Notifications = () => {
   return (
-    <ResponsiveLayout title="Notifications" activeTab="notifications">
+    <DashboardLayout activeTab="notifications">
       <div className="p-4 lg:p-6 space-y-6">
         <Tabs defaultValue="notifications" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -30,7 +30,7 @@ const Notifications = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </ResponsiveLayout>
+    </DashboardLayout>
   );
 };
 

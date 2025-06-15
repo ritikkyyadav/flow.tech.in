@@ -1,5 +1,5 @@
 
-import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { SecuritySettings } from "@/components/SecuritySettings";
 import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +7,7 @@ import { Shield, Bell } from "lucide-react";
 
 const Settings = () => {
   return (
-    <ResponsiveLayout title="Settings" activeTab="settings">
+    <DashboardLayout activeTab="settings">
       <div className="p-4 lg:p-6 space-y-6">
         <Tabs defaultValue="security" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -30,7 +30,7 @@ const Settings = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </ResponsiveLayout>
+    </DashboardLayout>
   );
 };
 
