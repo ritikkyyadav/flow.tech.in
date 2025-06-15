@@ -7,6 +7,7 @@ import { ProfitLossReport } from "./ProfitLossReport";
 import { SpendingCategoriesReport } from "./SpendingCategoriesReport";
 import { ReportFilters } from "./ReportFilters";
 import { IncomeExpenseChart } from "../dashboard/IncomeExpenseChart";
+import { formatIndianCurrency } from "@/utils/indianUtils";
 
 export const FinancialReports = () => {
   const { transactions, loading } = useTransactions();
