@@ -1,5 +1,5 @@
 
-import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { InvoiceList } from "@/components/InvoiceList";
 import { InvoiceBuilder } from "@/components/InvoiceBuilder";
 import { Button } from "@/components/ui/button";
@@ -30,40 +30,28 @@ const Invoices = () => {
 
   if (showInvoiceBuilder) {
     return (
-      <ResponsiveLayout 
-        title="Create Invoice" 
-        activeTab="invoices"
-        headerActions={
-          <Button 
-            onClick={handleBackToList}
-            variant="ghost"
-            size="sm"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-        }
-      >
-        <InvoiceBuilder onInvoiceCreated={handleBackToList} />
-      </ResponsiveLayout>
+      <DashboardLayout activeTab="invoices">
+        <div className="p-4 lg:p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900">Create Invoice</h1>
+            <Button 
+              onClick={handleBackToList}
+              variant="ghost"
+              size="sm"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to List
+            </Button>
+          </div>
+          <InvoiceBuilder onInvoiceCreated={handleBackToList} />
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
     <>
-      <ResponsiveLayout 
-        title="Invoices" 
-        activeTab="invoices"
-        headerActions={
-          <Button 
-            onClick={handleCreateInvoice}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md shadow-sm"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Invoice
-          </Button>
-        }
-      >
+      <DashboardLayout activeTab="invoices">
         <div className="p-4 lg:p-6 space-y-6">
           {/* Add a prominent create button at the top */}
           <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border">
@@ -83,7 +71,7 @@ const Invoices = () => {
 
           <InvoiceList />
         </div>
-      </ResponsiveLayout>
+      </DashboardLayout>
 
       {showInvoiceModal && (
         <InvoiceModal

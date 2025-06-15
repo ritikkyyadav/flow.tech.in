@@ -97,18 +97,13 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-white flex w-full">
-      {/* Sidebar - Always visible with absolute positioning */}
+    <div className="min-h-screen bg-white flex w-full relative">
+      {/* Sidebar - Fixed positioning with proper z-index */}
       <aside 
         className={cn(
-          "bg-black text-white transition-all duration-300 flex flex-col absolute left-0 top-0 h-screen z-50",
+          "bg-black text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen z-50",
           isSidebarCollapsed ? "w-16" : "w-64"
         )}
-        style={{ 
-          display: 'flex !important',
-          visibility: 'visible !important',
-          opacity: '1 !important'
-        }}
       >
         {/* Logo */}
         <div className="p-6 border-b border-gray-800 flex-shrink-0">
@@ -181,7 +176,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         </div>
       </aside>
 
-      {/* Main Content - Adjusted margin to account for absolute sidebar */}
+      {/* Main Content - Adjusted margin to account for fixed sidebar */}
       <div 
         className={cn(
           "flex-1 flex flex-col transition-all duration-300",
