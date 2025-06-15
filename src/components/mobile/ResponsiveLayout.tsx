@@ -1,121 +1,49 @@
 
-import { ReactNode } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { BottomNavigation } from "./BottomNavigation";
 import { MobileHeader } from "./MobileHeader";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { BottomNavigation } from "./BottomNavigation";
+import { useMobile } from "@/hooks/use-mobile";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface ResponsiveLayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
   title: string;
-  showBack?: boolean;
-  onBack?: () => void;
-  showSearch?: boolean;
-  onSearch?: () => void;
-  showNotifications?: boolean;
-  onNotifications?: () => void;
-  headerActions?: ReactNode;
-  className?: string;
-  activeTab?: string;
-  onTabChange?: (tab: string) => void;
+  activeTab: string;
+  headerActions?: React.ReactNode;
 }
 
-export const ResponsiveLayout = ({
-  children,
-  title,
-  showBack,
-  onBack,
-  showSearch,
-  onSearch,
-  showNotifications,
-  onNotifications,
-  headerActions,
-  className,
-  activeTab,
-  onTabChange
-}: ResponsiveLayoutProps) => {
-  const isMobile = useIsMobile();
-  const navigate = useNavigate();
-  const location = useLocation();
+export const ResponsiveLayout = ({ children, title, activeTab, headerActions }: ResponsiveLayoutProps) => {
+  const isMobile = useMobile();
 
-  // Determine active tab from current location if not provided
-  const currentActiveTab = activeTab || (() => {
-    const path = location.pathname;
-    if (path === '/dashboard') return 'dashboard';
-    if (path === '/transactions') return 'transactions';
-    if (path === '/budget') return 'budget';
-    if (path === '/invoices') return 'invoices';
-    if (path === '/reports') return 'reports';
-    if (path === '/settings') return 'settings';
-    if (path === '/profile') return 'profile';
-    return 'dashboard';
-  })();
-
-  const handleTabChange = (tab: string) => {
-    if (onTabChange) {
-      onTabChange(tab);
-    }
-    
-    // Handle navigation for different tabs
-    switch (tab) {
-      case 'dashboard':
-        navigate('/dashboard');
-        break;
-      case 'transactions':
-        navigate('/transactions');
-        break;
-      case 'budget':
-        navigate('/budget');
-        break;
-      case 'invoices':
-        navigate('/invoices');
-        break;
-      case 'reports':
-        navigate('/reports');
-        break;
-      case 'settings':
-        navigate('/settings');
-        break;
-      case 'profile':
-        navigate('/profile');
-        break;
-      default:
-        navigate('/dashboard');
-        break;
-    }
-  };
-
-  if (!isMobile) {
+  if (isMobile) {
     return (
-      <DashboardLayout activeTab={currentActiveTab} onTabChange={handleTabChange}>
-        {children}
-      </DashboardLayout>
+      <div className="min-h-screen bg-gray-50 pb-16">
+        <MobileHeader 
+          title={title} 
+          actions={
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              {headerActions}
+            </div>
+          }
+        />
+        <div className="pt-16">
+          {children}
+        </div>
+        <BottomNavigation activeTab={activeTab} />
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <MobileHeader
-        title={title}
-        showBack={showBack}
-        onBack={onBack}
-        showSearch={showSearch}
-        onSearch={onSearch}
-        showNotifications={showNotifications}
-        onNotifications={onNotifications}
-        actions={headerActions}
-      />
-      
-      <main className={cn(
-        "flex-1 overflow-auto pb-20", // pb-20 for bottom navigation space
-        className
-      )}>
-        {children}
-      </main>
-      
-      <BottomNavigation activeTab={currentActiveTab} onTabChange={handleTabChange} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex justify-between items-center p-6 bg-white border-b">
+        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          {headerActions}
+        </div>
+      </div>
+      {children}
     </div>
   );
 };

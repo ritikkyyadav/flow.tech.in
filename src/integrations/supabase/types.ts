@@ -368,6 +368,87 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          bill_reminders: boolean
+          budget_alerts: boolean
+          created_at: string
+          email_notifications: boolean
+          id: string
+          push_notifications: boolean
+          transaction_alerts: boolean
+          unusual_spending: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bill_reminders?: boolean
+          budget_alerts?: boolean
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          push_notifications?: boolean
+          transaction_alerts?: boolean
+          unusual_spending?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bill_reminders?: boolean
+          budget_alerts?: boolean
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          push_notifications?: boolean
+          transaction_alerts?: boolean
+          unusual_spending?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          auto_dismiss: boolean
+          created_at: string
+          dismiss_after_seconds: number | null
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          auto_dismiss?: boolean
+          created_at?: string
+          dismiss_after_seconds?: number | null
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          auto_dismiss?: boolean
+          created_at?: string
+          dismiss_after_seconds?: number | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_address: string | null
