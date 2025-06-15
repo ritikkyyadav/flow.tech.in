@@ -44,6 +44,8 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
   ];
 
   const handleMenuClick = (itemId: string) => {
+    console.log('Menu clicked:', itemId);
+    
     if (onTabChange) {
       onTabChange(itemId);
     }
@@ -78,6 +80,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         navigate('/settings');
         break;
       default:
+        console.log('Unknown menu item:', itemId);
         break;
     }
   };
@@ -86,17 +89,22 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
     await signOut();
   };
 
+  const toggleSidebar = () => {
+    console.log('Toggling sidebar, current state:', isSidebarCollapsed);
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Sidebar */}
+    <div className="min-h-screen bg-white flex w-full">
+      {/* Sidebar - Fixed positioning to prevent disappearing */}
       <aside 
         className={cn(
-          "bg-black text-white transition-all duration-300 flex flex-col",
+          "bg-black text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-full z-40",
           isSidebarCollapsed ? "w-16" : "w-64"
         )}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-gray-800">
+        <div className="p-6 border-b border-gray-800 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 flex items-center justify-center">
               <img 
@@ -115,10 +123,10 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 overflow-y-auto">
           <ul className="space-y-2">
             {menuItems.map((item) => (
-              <li key={item.label}>
+              <li key={item.id}>
                 <Button
                   variant={item.active ? "secondary" : "ghost"}
                   className={cn(
@@ -139,7 +147,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         </nav>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-800 flex-shrink-0">
           <div className="flex items-center space-x-3 mb-3">
             <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
               <User className="w-4 h-4" />
@@ -166,8 +174,13 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      {/* Main Content - Adjusted margin to account for fixed sidebar */}
+      <div 
+        className={cn(
+          "flex-1 flex flex-col transition-all duration-300",
+          isSidebarCollapsed ? "ml-16" : "ml-64"
+        )}
+      >
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -175,7 +188,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                onClick={toggleSidebar}
                 className="text-gray-600"
               >
                 <List className="w-5 h-5" />
