@@ -135,7 +135,7 @@ export const BackupRestore = () => {
               location: transaction.location,
               reference_number: transaction.reference_number,
               is_business_related: transaction.is_business_related,
-              is_reimbursable: transaction.is_re imbursable
+              is_reimbursable: transaction.is_reimbursable
             });
             processed++;
           } catch (error) {
