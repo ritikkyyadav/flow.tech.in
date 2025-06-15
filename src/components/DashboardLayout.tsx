@@ -46,9 +46,10 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
   const handleMenuClick = (itemId: string) => {
     console.log('Menu clicked:', itemId);
     
-    if (onTabChange) {
-      onTabChange(itemId);
-    }
+    // Don't call onTabChange to prevent sidebar issues
+    // if (onTabChange) {
+    //   onTabChange(itemId);
+    // }
     
     // Handle navigation for different tabs
     switch (itemId) {

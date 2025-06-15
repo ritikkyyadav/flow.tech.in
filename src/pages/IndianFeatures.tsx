@@ -1,10 +1,10 @@
 
-import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { IndianFeaturesDashboard } from "@/components/indian/IndianFeaturesDashboard";
 
 const IndianFeatures = () => {
   return (
-    <ResponsiveLayout title="Indian Features" activeTab="data">
+    <DashboardLayout activeTab="indian">
       <div className="p-4 lg:p-6 space-y-6">
         <div className="print:hidden">
           <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
@@ -17,7 +17,7 @@ const IndianFeatures = () => {
         </div>
         <IndianFeaturesDashboard />
       </div>
-    </ResponsiveLayout>
+    </DashboardLayout>
   );
 };
 
