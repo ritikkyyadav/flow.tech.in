@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
+import { AIChatAssistant } from "@/components/AIChatAssistant";
 import { 
   TrendingUp, 
   FileText, 
@@ -28,6 +29,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange }: DashboardLayoutProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,143 +93,156 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
+  const handleAromaClick = () => {
+    console.log('Aroma AI Assistant clicked');
+    setShowAIAssistant(true);
+  };
+
   // Ensure sidebar visibility is maintained across route changes
   useEffect(() => {
     console.log('Route changed to:', location.pathname);
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-white flex w-full relative">
-      {/* Sidebar - Fixed positioning with proper z-index */}
-      <aside 
-        className={cn(
-          "bg-black text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen z-50",
-          isSidebarCollapsed ? "w-16" : "w-64"
-        )}
-      >
-        {/* Logo */}
-        <div className="p-6 border-b border-gray-800 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png" 
-                alt="Withu Logo" 
-                className="w-full h-full object-contain"
-              />
+    <>
+      <div className="min-h-screen bg-white flex w-full relative">
+        {/* Sidebar - Fixed positioning with proper z-index */}
+        <aside 
+          className={cn(
+            "bg-black text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen z-50",
+            isSidebarCollapsed ? "w-16" : "w-64"
+          )}
+        >
+          {/* Logo */}
+          <div className="p-6 border-b border-gray-800 flex-shrink-0">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 flex items-center justify-center">
+                <img 
+                  src="/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png" 
+                  alt="Withu Logo" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              {!isSidebarCollapsed && (
+                <div>
+                  <h1 className="text-xl font-bold">Withu</h1>
+                  <p className="text-gray-400 text-sm">AI-Powered Finance</p>
+                </div>
+              )}
             </div>
-            {!isSidebarCollapsed && (
-              <div>
-                <h1 className="text-xl font-bold">Withu</h1>
-                <p className="text-gray-400 text-sm">AI-Powered Finance</p>
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 overflow-y-auto">
-          <ul className="space-y-2">
-            {menuItems.map((item) => (
-              <li key={item.id}>
-                <Button
-                  variant={item.active ? "secondary" : "ghost"}
-                  className={cn(
-                    "w-full justify-start text-white hover:bg-gray-800",
-                    item.active && "bg-gray-800",
-                    isSidebarCollapsed && "px-2"
-                  )}
-                  onClick={() => handleMenuClick(item.id)}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {!isSidebarCollapsed && (
-                    <span className="ml-3">{item.label}</span>
-                  )}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </nav>
+          {/* Navigation */}
+          <nav className="flex-1 p-4 overflow-y-auto">
+            <ul className="space-y-2">
+              {menuItems.map((item) => (
+                <li key={item.id}>
+                  <Button
+                    variant={item.active ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start text-white hover:bg-gray-800",
+                      item.active && "bg-gray-800",
+                      isSidebarCollapsed && "px-2"
+                    )}
+                    onClick={() => handleMenuClick(item.id)}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {!isSidebarCollapsed && (
+                      <span className="ml-3">{item.label}</span>
+                    )}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-        {/* User Profile */}
-        <div className="p-4 border-t border-gray-800 flex-shrink-0">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4" />
-            </div>
-            {!isSidebarCollapsed && (
-              <div className="flex-1">
-                <p className="text-sm font-medium">{user?.email}</p>
-                <p className="text-xs text-gray-400">User</p>
+          {/* User Profile */}
+          <div className="p-4 border-t border-gray-800 flex-shrink-0">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4" />
               </div>
-            )}
-          </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-white hover:bg-gray-800"
-            onClick={handleSignOut}
-          >
-            <LogOut className="w-4 h-4" />
-            {!isSidebarCollapsed && (
-              <span className="ml-2">Sign Out</span>
-            )}
-          </Button>
-        </div>
-      </aside>
-
-      {/* Main Content - Adjusted margin to account for fixed sidebar */}
-      <div 
-        className={cn(
-          "flex-1 flex flex-col transition-all duration-300",
-          isSidebarCollapsed ? "ml-16" : "ml-64"
-        )}
-      >
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleSidebar}
-                className="text-gray-600"
-              >
-                <List className="w-5 h-5" />
-              </Button>
-              <div>
-                <h2 className="text-2xl font-bold text-black">
-                  {menuItems.find(item => item.active)?.label || "Dashboard"}
-                </h2>
-                <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
-              </div>
+              {!isSidebarCollapsed && (
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{user?.email}</p>
+                  <p className="text-xs text-gray-400">User</p>
+                </div>
+              )}
             </div>
             
-            <div className="flex items-center space-x-3">
-              <Button 
-                className="bg-black text-white hover:bg-gray-800"
-                onClick={() => handleMenuClick('transactions')}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Quick Add
-              </Button>
-              <Button 
-                variant="outline" 
-                className="border-gray-300"
-                onClick={() => console.log('AI Assistant clicked')}
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                AI Assistant
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-white hover:bg-gray-800"
+              onClick={handleSignOut}
+            >
+              <LogOut className="w-4 h-4" />
+              {!isSidebarCollapsed && (
+                <span className="ml-2">Sign Out</span>
+              )}
+            </Button>
           </div>
-        </header>
+        </aside>
 
-        {/* Main Content Area */}
-        <main className="flex-1 bg-gray-50">
-          {children}
-        </main>
+        {/* Main Content - Adjusted margin to account for fixed sidebar */}
+        <div 
+          className={cn(
+            "flex-1 flex flex-col transition-all duration-300",
+            isSidebarCollapsed ? "ml-16" : "ml-64"
+          )}
+        >
+          {/* Header */}
+          <header className="bg-white border-b border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleSidebar}
+                  className="text-gray-600"
+                >
+                  <List className="w-5 h-5" />
+                </Button>
+                <div>
+                  <h2 className="text-2xl font-bold text-black">
+                    {menuItems.find(item => item.active)?.label || "Dashboard"}
+                  </h2>
+                  <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <Button 
+                  className="bg-black text-white hover:bg-gray-800"
+                  onClick={() => handleMenuClick('transactions')}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Quick Add
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-gray-300"
+                  onClick={handleAromaClick}
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Aroma
+                </Button>
+              </div>
+            </div>
+          </header>
+
+          {/* Main Content Area */}
+          <main className="flex-1 bg-gray-50">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+
+      {/* AI Chat Assistant Modal */}
+      <AIChatAssistant 
+        isOpen={showAIAssistant} 
+        onClose={() => setShowAIAssistant(false)} 
+      />
+    </>
   );
 };
