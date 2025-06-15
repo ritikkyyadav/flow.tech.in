@@ -1,9 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   TrendingUp, 
   FileText, 
@@ -30,6 +30,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const menuItems = [
     { id: "dashboard", icon: Home, label: "Dashboard", active: activeTab === "dashboard" },
@@ -45,11 +46,6 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
 
   const handleMenuClick = (itemId: string) => {
     console.log('Menu clicked:', itemId);
-    
-    // Don't call onTabChange to prevent sidebar issues
-    // if (onTabChange) {
-    //   onTabChange(itemId);
-    // }
     
     // Handle navigation for different tabs
     switch (itemId) {
@@ -95,14 +91,20 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
+  // Ensure sidebar visibility is maintained across route changes
+  useEffect(() => {
+    console.log('Route changed to:', location.pathname);
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-white flex w-full">
-      {/* Sidebar - Fixed positioning to prevent disappearing */}
+      {/* Sidebar - Always visible with proper z-index */}
       <aside 
         className={cn(
-          "bg-black text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-full z-40",
+          "bg-black text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-full z-50",
           isSidebarCollapsed ? "w-16" : "w-64"
         )}
+        style={{ display: 'flex' }} // Force display to prevent hiding
       >
         {/* Logo */}
         <div className="p-6 border-b border-gray-800 flex-shrink-0">

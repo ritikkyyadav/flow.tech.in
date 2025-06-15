@@ -1,10 +1,10 @@
 
-import { ResponsiveLayout } from "@/components/mobile/ResponsiveLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { FinancialReports } from "@/components/reports/FinancialReports";
 
 const Reports = () => {
   return (
-    <ResponsiveLayout title="Financial Reports" activeTab="reports">
+    <DashboardLayout activeTab="reports">
       <div className="p-4 lg:p-6 space-y-6">
         <div className="print:hidden">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Financial Reports</h1>
@@ -14,7 +14,7 @@ const Reports = () => {
         </div>
         <FinancialReports />
       </div>
-    </ResponsiveLayout>
+    </DashboardLayout>
   );
 };
 
