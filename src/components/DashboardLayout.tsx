@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,9 @@ import {
   LogOut,
   Home,
   BarChart3,
-  Target
+  Target,
+  Database,
+  Flag
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -34,6 +37,8 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
     { id: "budget", icon: Target, label: "Budget", active: activeTab === "budget" },
     { id: "invoices", icon: FileText, label: "Invoices", active: activeTab === "invoices" },
     { id: "reports", icon: BarChart3, label: "Reports", active: activeTab === "reports" },
+    { id: "data", icon: Database, label: "Data Management", active: activeTab === "data" },
+    { id: "indian", icon: Flag, label: "Indian Features", active: activeTab === "indian" },
     { id: "profile", icon: User, label: "Profile", active: activeTab === "profile" },
     { id: "settings", icon: Settings, label: "Settings", active: activeTab === "settings" },
   ];
@@ -59,6 +64,12 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         break;
       case 'reports':
         navigate('/reports');
+        break;
+      case 'data':
+        navigate('/data-management');
+        break;
+      case 'indian':
+        navigate('/indian-features');
         break;
       case 'profile':
         navigate('/profile');

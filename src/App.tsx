@@ -13,6 +13,8 @@ import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Budget from "./pages/Budget";
+import DataManagement from "./pages/DataManagement";
+import IndianFeatures from "./pages/IndianFeatures";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -65,6 +67,22 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Budget />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/data-management"
+                  element={
+                    <ProtectedRoute>
+                      <DataManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/indian-features"
+                  element={
+                    <ProtectedRoute>
+                      <IndianFeatures />
                     </ProtectedRoute>
                   }
                 />
