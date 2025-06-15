@@ -1,6 +1,7 @@
 
 import { MobileHeader } from "./MobileHeader";
 import { BottomNavigation } from "./BottomNavigation";
+import { PWAInstall } from "./PWAInstall";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
@@ -30,6 +31,7 @@ export const ResponsiveLayout = ({ children, title, activeTab, headerActions }: 
           {children}
         </div>
         <BottomNavigation activeTab={activeTab} />
+        <PWAInstall />
       </div>
     );
   }

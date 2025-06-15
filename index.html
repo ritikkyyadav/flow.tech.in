@@ -1,24 +1,57 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>financeflow-indie-wealth-ai</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>WithU - AI-Powered Finance</title>
+    <meta name="description" content="AI-powered personal finance management app with smart categorization and insights" />
+    <meta name="author" content="WithU" />
 
-    <meta property="og:title" content="financeflow-indie-wealth-ai" />
-    <meta property="og:description" content="Lovable Generated Project" />
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WithU">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <meta name="msapplication-TileColor" content="#000000">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png">
+    <link rel="icon" type="image/png" href="/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png">
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png" as="image">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="WithU - AI-Powered Finance" />
+    <meta property="og:description" content="Smart personal finance management with AI-powered insights" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image" content="/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png" />
 
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="WithU - AI-Powered Finance" />
+    <meta name="twitter:description" content="Smart personal finance management with AI-powered insights" />
+    <meta name="twitter:image" content="/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png" />
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(() => console.log('SW registered'))
+            .catch(() => console.log('SW registration failed'));
+        });
+      }
+    </script>
   </body>
 </html>
