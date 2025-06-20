@@ -1,4 +1,3 @@
-
 {
   "name": "WithU - AI-Powered Finance",
   "short_name": "WithU",
@@ -24,5 +23,16 @@
   ],
   "categories": ["finance", "productivity", "business"],
   "lang": "en",
-  "dir": "ltr"
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false,
+  "display_override": ["window-controls-overlay", "standalone"],
+  "screenshots": [
+    {
+      "src": "/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
 }
