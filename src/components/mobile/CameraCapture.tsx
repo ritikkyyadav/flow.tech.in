@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,12 +12,17 @@ interface CameraCaptureProps {
 
 export const CameraCapture = ({ isOpen, onClose, onCapture }: CameraCaptureProps) => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Maximum file size: 5MB
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   const handleFileCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid File",
@@ -28,11 +32,34 @@ export const CameraCapture = ({ isOpen, onClose, onCapture }: CameraCaptureProps
       return;
     }
 
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
     const reader = new FileReader();
+    
     reader.onload = (e) => {
       const imageData = e.target?.result as string;
       setCapturedImage(imageData);
+      setIsLoading(false);
     };
+
+    reader.onerror = () => {
+      toast({
+        title: "Error",
+        description: "Failed to read the image file",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    };
+
     reader.readAsDataURL(file);
   };
 
@@ -55,8 +82,16 @@ export const CameraCapture = ({ isOpen, onClose, onCapture }: CameraCaptureProps
     }
   };
 
+  const handleClose = () => {
+    setCapturedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -72,6 +107,9 @@ export const CameraCapture = ({ isOpen, onClose, onCapture }: CameraCaptureProps
               <p className="text-gray-600 mb-4">
                 Capture or upload a receipt image
               </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Maximum file size: 5MB
+              </p>
               
               <input
                 ref={fileInputRef}
@@ -80,14 +118,16 @@ export const CameraCapture = ({ isOpen, onClose, onCapture }: CameraCaptureProps
                 capture="environment"
                 onChange={handleFileCapture}
                 className="hidden"
+                aria-label="Select receipt image"
               />
               
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full"
+                disabled={isLoading}
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Choose Image
+                {isLoading ? "Loading..." : "Choose Image"}
               </Button>
             </div>
           ) : (
@@ -97,6 +137,7 @@ export const CameraCapture = ({ isOpen, onClose, onCapture }: CameraCaptureProps
                   src={capturedImage}
                   alt="Captured receipt"
                   className="w-full max-h-64 object-contain rounded-lg border"
+                  loading="lazy"
                 />
               </div>
               
