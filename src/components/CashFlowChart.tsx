@@ -63,7 +63,16 @@ export const CashFlowChart = ({ refreshTrigger }: CashFlowChartProps) => {
         .gte('transaction_date', startDate.toISOString())
         .order('transaction_date', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching cash flow data:', error);
+        throw new Error(`Failed to fetch cash flow data: ${error.message || 'Unknown error'}`);
+      }
+
+      // Add null check for transactions
+      if (!transactions || transactions.length === 0) {
+        setData([]);
+        return;
+      }
 
       // Group transactions by month
       const monthlyData = transactions?.reduce((acc: any, transaction: any) => {
