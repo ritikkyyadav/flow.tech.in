@@ -1,4 +1,4 @@
-
+// ========== COPY THIS ENTIRE IMPORTS SECTION ==========
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FinancialOverviewCards } from "@/components/dashboard/FinancialOverviewCards";
 import { RecentTransactionsPanel } from "@/components/dashboard/RecentTransactionsPanel";
@@ -8,9 +8,21 @@ import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useMemo } from "react";
 
+// ADD THESE NEW IMPORTS:
+import { CashFlowChart } from "@/components/CashFlowChart";
+import { TransactionAnalytics } from "@/components/TransactionAnalytics";
+import { ChartErrorBoundary } from "@/components/ui/ChartErrorBoundary";
+import { 
+  validateTransactions, 
+  formatCurrency, 
+  calculateSummaryStats 
+} from "@/utils/chartDataUtils";
+
+// ========== THEN USE THE COMPONENTS IN YOUR JSX ==========
 const Dashboard = () => {
   const { transactions, loading } = useTransactions();
 
+  // Your existing dashboardData logic can now use the utility functions:
   const dashboardData = useMemo(() => {
     if (loading || !transactions) {
       return {
@@ -24,11 +36,15 @@ const Dashboard = () => {
       };
     }
 
-    const income = transactions
+    // NOW YOU CAN USE THE UTILITY FUNCTIONS:
+    const validTransactions = validateTransactions(transactions);
+    const summaryStats = calculateSummaryStats(validTransactions);
+
+    const income = validTransactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
     
-    const expenses = transactions
+    const expenses = validTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
@@ -36,7 +52,7 @@ const Dashboard = () => {
     const savingsRate = income > 0 ? ((balance / income) * 100) : 0;
 
     // Create category data for pie chart
-    const categoryData = transactions
+    const categoryData = validTransactions
       .filter(t => t.type === 'expense')
       .reduce((acc: any[], transaction) => {
         const existing = acc.find(item => item.name === transaction.category);
@@ -53,7 +69,7 @@ const Dashboard = () => {
       }, []);
 
     // Create monthly income/expense data for line chart with proper typing
-    const monthlyData = transactions.reduce((acc: Record<string, { month: string; income: number; expenses: number }>, transaction) => {
+    const monthlyData = validTransactions.reduce((acc: Record<string, { month: string; income: number; expenses: number }>, transaction) => {
       const date = new Date(transaction.transaction_date);
       const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       
@@ -79,9 +95,10 @@ const Dashboard = () => {
       monthlyIncome: income,
       monthlyExpenses: expenses,
       savingsRate,
-      recentTransactions: transactions.slice(0, 5),
+      recentTransactions: validTransactions.slice(0, 5),
       categoryData,
-      incomeExpenseData
+      incomeExpenseData,
+      summaryStats // Add this for use in other components
     };
   }, [transactions, loading]);
 
@@ -116,23 +133,39 @@ const Dashboard = () => {
           />
         </div>
 
+        {/* ADD THE NEW CHART COMPONENTS WITH ERROR BOUNDARIES */}
+        
+        {/* Cash Flow Chart */}
+        <ChartErrorBoundary fallbackTitle="Cash Flow Chart Error">
+          <CashFlowChart />
+        </ChartErrorBoundary>
+
+        {/* Transaction Analytics */}
+        <ChartErrorBoundary fallbackTitle="Transaction Analytics Error">
+          <TransactionAnalytics />
+        </ChartErrorBoundary>
+
         {/* Income vs Expense Chart */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-          <IncomeExpenseChart 
-            data={dashboardData.incomeExpenseData}
-            loading={loading}
-            className="border-0 shadow-none"
-          />
+          <ChartErrorBoundary fallbackTitle="Income vs Expense Chart Error">
+            <IncomeExpenseChart 
+              data={dashboardData.incomeExpenseData}
+              loading={loading}
+              className="border-0 shadow-none"
+            />
+          </ChartErrorBoundary>
         </div>
 
         {/* Main Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Enhanced Category Chart */}
           <div className="lg:col-span-2">
-            <EnhancedCategoryChart 
-              data={transactions}
-              className="shadow-sm border-gray-100 rounded-2xl bg-white overflow-hidden"
-            />
+            <ChartErrorBoundary fallbackTitle="Category Chart Error">
+              <EnhancedCategoryChart 
+                data={transactions}
+                className="shadow-sm border-gray-100 rounded-2xl bg-white overflow-hidden"
+              />
+            </ChartErrorBoundary>
           </div>
 
           {/* Right Column - Quick Actions */}
