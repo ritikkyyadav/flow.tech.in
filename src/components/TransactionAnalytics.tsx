@@ -29,8 +29,8 @@ import {
   Filter,
   RefreshCw
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 // Type definitions
 interface Transaction {
@@ -302,36 +302,37 @@ export const TransactionAnalytics: React.FC = () => {
       const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const avgDailySpending = daysDiff > 0 ? totalExpenses / daysDiff : 0;
       
-      // Find highest spending day
-      const dailySpending = expenses.reduce((acc: any, transaction) => {
+      // Find highest spending day with proper typing
+      const dailySpendingMap: Record<string, { date: string; amount: number; dayOfWeek: string }> = {};
+      
+      expenses.forEach(transaction => {
         const date = transaction.transaction_date;
         const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
         
-        if (!acc[date]) {
-          acc[date] = { date, amount: 0, dayOfWeek };
+        if (!dailySpendingMap[date]) {
+          dailySpendingMap[date] = { date, amount: 0, dayOfWeek };
         }
-        acc[date].amount += sanitizeNumericValue(transaction.amount);
-        return acc;
-      }, {});
+        dailySpendingMap[date].amount += sanitizeNumericValue(transaction.amount);
+      });
 
-      const dailySpendingArray = Object.values(dailySpending);
-      const highestSpendingDay = dailySpendingArray.reduce((max: any, day: any) => 
+      const dailySpendingArray = Object.values(dailySpendingMap);
+      const highestSpendingDay = dailySpendingArray.reduce((max, day) => 
         day.amount > max.amount ? day : max, 
         { amount: 0, dayOfWeek: 'N/A' }
       );
 
       // Category breakdown
-      const categoryData = expenses.reduce((acc: any, transaction) => {
+      const categoryData: Record<string, number> = {};
+      expenses.forEach(transaction => {
         const category = transaction.category || 'Other';
-        if (!acc[category]) {
-          acc[category] = 0;
+        if (!categoryData[category]) {
+          categoryData[category] = 0;
         }
-        acc[category] += sanitizeNumericValue(transaction.amount);
-        return acc;
-      }, {});
+        categoryData[category] += sanitizeNumericValue(transaction.amount);
+      });
 
       const categoryBreakdown = Object.entries(categoryData)
-        .map(([name, value]: [string, any], index) => ({
+        .map(([name, value], index) => ({
           name,
           value: sanitizeNumericValue(value),
           percentage: totalExpenses > 0 ? (sanitizeNumericValue(value) / totalExpenses) * 100 : 0,
@@ -340,14 +341,14 @@ export const TransactionAnalytics: React.FC = () => {
         .sort((a, b) => b.value - a.value);
 
       // Most frequent category
-      const categoryFrequency = expenses.reduce((acc: any, transaction) => {
+      const categoryFrequency: Record<string, number> = {};
+      expenses.forEach(transaction => {
         const category = transaction.category || 'Other';
-        acc[category] = (acc[category] || 0) + 1;
-        return acc;
-      }, {});
+        categoryFrequency[category] = (categoryFrequency[category] || 0) + 1;
+      });
 
       const mostFrequentCategory = Object.entries(categoryFrequency).reduce(
-        (max: any, [category, count]: [string, any]) => 
+        (max, [category, count]) => 
           count > max.count ? { category, count } : max,
         { category: 'N/A', count: 0 }
       ).category;
@@ -358,28 +359,28 @@ export const TransactionAnalytics: React.FC = () => {
         0
       );
 
-      // Monthly trends
-      const monthlyData = validTransactions.reduce((acc: any, transaction) => {
+      // Monthly trends with proper typing
+      const monthlyDataMap: Record<string, { month: string; income: number; expense: number; net: number }> = {};
+      
+      validTransactions.forEach(transaction => {
         const date = new Date(transaction.transaction_date);
         const monthKey = date.toISOString().slice(0, 7); // YYYY-MM
         const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         
-        if (!acc[monthKey]) {
-          acc[monthKey] = { month: monthName, income: 0, expense: 0, net: 0 };
+        if (!monthlyDataMap[monthKey]) {
+          monthlyDataMap[monthKey] = { month: monthName, income: 0, expense: 0, net: 0 };
         }
         
         const amount = sanitizeNumericValue(transaction.amount);
         if (transaction.type === 'income') {
-          acc[monthKey].income += amount;
+          monthlyDataMap[monthKey].income += amount;
         } else {
-          acc[monthKey].expense += amount;
+          monthlyDataMap[monthKey].expense += amount;
         }
-        acc[monthKey].net = acc[monthKey].income - acc[monthKey].expense;
-        
-        return acc;
-      }, {});
+        monthlyDataMap[monthKey].net = monthlyDataMap[monthKey].income - monthlyDataMap[monthKey].expense;
+      });
 
-      const monthlyTrends = Object.values(monthlyData).sort((a: any, b: any) => 
+      const monthlyTrends = Object.values(monthlyDataMap).sort((a, b) => 
         a.month.localeCompare(b.month)
       );
 
