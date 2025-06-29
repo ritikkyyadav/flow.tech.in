@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { type AISettings, type AIProvider as AIProviderType, type AIRequest } from '@/types/ai';
+import { type AISettings, type AIProviderType as AIProvider, type AIRequest } from '@/types/ai';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -9,7 +9,7 @@ interface AIContextType {
   settings: AISettings | null;
   loading: boolean;
   updateSettings: (settings: Partial<AISettings>) => Promise<void>;
-  testProvider: (provider: AIProviderType) => Promise<boolean>;
+  testProvider: (provider: AIProvider) => Promise<boolean>;
   makeAIRequest: (request: Omit<AIRequest, 'id' | 'timestamp' | 'duration' | 'status'>) => Promise<string>;
   getUsageStats: () => Promise<any>;
   isFeatureEnabled: (feature: keyof AISettings['features']) => boolean;
@@ -101,7 +101,8 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       }
 
       if (data) {
-        setSettings(data.settings as AISettings);
+        // Properly cast the JSON data to AISettings
+        setSettings(data.settings as unknown as AISettings);
       } else {
         setSettings(defaultAISettings);
       }
@@ -128,7 +129,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         .from('ai_settings')
         .upsert({
           user_id: user.id,
-          settings: updatedSettings,
+          settings: updatedSettings as any, // Cast to any to satisfy Json type
           updated_at: new Date().toISOString()
         });
 
@@ -149,7 +150,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     }
   };
 
-  const testProvider = async (provider: AIProviderType): Promise<boolean> => {
+  const testProvider = async (provider: AIProvider): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke('test-ai-provider', {
         body: { provider }
