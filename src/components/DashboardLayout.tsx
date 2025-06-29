@@ -42,6 +42,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
     { id: "reports", icon: BarChart3, label: "Reports", active: activeTab === "reports" },
     { id: "data", icon: Database, label: "Data Management", active: activeTab === "data" },
     { id: "indian", icon: Flag, label: "Indian Features", active: activeTab === "indian" },
+    { id: "subscription", icon: Plus, label: "Subscription", active: activeTab === "subscription" },
     { id: "profile", icon: User, label: "Profile", active: activeTab === "profile" },
     { id: "settings", icon: Settings, label: "Settings", active: activeTab === "settings" },
   ];
@@ -71,6 +72,9 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         break;
       case 'indian':
         navigate('/indian-features');
+        break;
+      case 'subscription':
+        navigate('/subscription');
         break;
       case 'profile':
         navigate('/profile');
