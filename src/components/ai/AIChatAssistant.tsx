@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Send, Brain, User, Bot, Mic, MicOff } from 'lucide-react';
+import { MessageCircle, Send, Brain, User, Bot, Mic, MicOff, TrendingDown, Target, PieChart, BarChart3 } from 'lucide-react';
 import { useAI } from '@/contexts/AIContext';
 import { useTransactions } from '@/contexts/TransactionContext';
 import { toast } from '@/hooks/use-toast';
