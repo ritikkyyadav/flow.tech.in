@@ -7,15 +7,27 @@ import { RecentTransactionsPanel } from "@/components/dashboard/RecentTransactio
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { useSubscription } from "@/hooks/useSubscription";
+import { ChartDataService } from "@/services/chartDataService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Crown, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 
 const Dashboard = () => {
-  const { data, isLoading } = useRealTimeData();
+  const { data, isLoading, refreshData } = useRealTimeData();
   const { subscription, limits, upgradeRequired } = useSubscription();
   const navigate = useNavigate();
+
+  // Calculate metrics for the enhanced cards
+  const metrics = useMemo(() => {
+    return ChartDataService.calculateMetrics(data);
+  }, [data]);
+
+  // Prepare chart data
+  const chartData = useMemo(() => {
+    return ChartDataService.prepareChartData(data);
+  }, [data]);
 
   const handleQuickAction = (action: string) => {
     console.log('Quick action triggered:', action);
@@ -35,6 +47,10 @@ const Dashboard = () => {
       default:
         console.log('Unknown action:', action);
     }
+  };
+
+  const handleRefresh = () => {
+    refreshData();
   };
 
   if (isLoading) {
@@ -87,19 +103,19 @@ const Dashboard = () => {
         )}
 
         {/* Financial Overview Cards */}
-        <EnhancedFinancialOverviewCards />
+        <EnhancedFinancialOverviewCards metrics={metrics} loading={isLoading} />
 
         {/* Quick Actions */}
-        <QuickActionsPanel onAction={handleQuickAction} />
+        <QuickActionsPanel onRefresh={handleRefresh} />
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <FixedIncomeExpenseChart />
-          <FixedCategoryChart />
+          <FixedIncomeExpenseChart data={chartData.monthlyData} />
+          <FixedCategoryChart data={chartData.categoryData} />
         </div>
 
         {/* Recent Transactions */}
-        <RecentTransactionsPanel />
+        <RecentTransactionsPanel transactions={data.recentTransactions} onRefresh={handleRefresh} />
 
         {/* Usage Statistics for Starter Plan */}
         {subscription?.plan === 'starter' && (

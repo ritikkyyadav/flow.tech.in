@@ -24,8 +24,11 @@ interface Transaction {
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  type?: 'income' | 'expense';
+  onTransactionAdded: () => void;
   transaction?: Transaction | null;
-  mode: 'add' | 'edit';
+  mode?: 'add' | 'edit';
+  editTransaction?: Transaction | null;
 }
 
 const categories = {
@@ -43,38 +46,44 @@ const categories = {
 export const TransactionModal: React.FC<TransactionModalProps> = ({
   isOpen,
   onClose,
+  type = 'expense',
+  onTransactionAdded,
   transaction,
-  mode
+  mode = 'add',
+  editTransaction
 }) => {
   const { getRemainingTransactions, subscription } = useSubscription();
   const [formData, setFormData] = useState({
     amount: '',
-    type: 'expense' as 'income' | 'expense',
+    type: type as 'income' | 'expense',
     category: '',
     description: '',
     transaction_date: new Date().toISOString().split('T')[0]
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Use editTransaction if provided, otherwise use transaction
+  const transactionToEdit = editTransaction || transaction;
+
   useEffect(() => {
-    if (transaction && mode === 'edit') {
+    if (transactionToEdit && mode === 'edit') {
       setFormData({
-        amount: transaction.amount.toString(),
-        type: transaction.type,
-        category: transaction.category,
-        description: transaction.description,
-        transaction_date: transaction.transaction_date
+        amount: transactionToEdit.amount.toString(),
+        type: transactionToEdit.type,
+        category: transactionToEdit.category,
+        description: transactionToEdit.description,
+        transaction_date: transactionToEdit.transaction_date
       });
     } else {
       setFormData({
         amount: '',
-        type: 'expense',
+        type: type,
         category: '',
         description: '',
         transaction_date: new Date().toISOString().split('T')[0]
       });
     }
-  }, [transaction, mode, isOpen]);
+  }, [transactionToEdit, mode, isOpen, type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,10 +113,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       // Get existing transactions
       const existingTransactions = JSON.parse(localStorage.getItem('withu_transactions') || '[]');
 
-      if (mode === 'edit' && transaction) {
+      if (mode === 'edit' && transactionToEdit) {
         // Update existing transaction
         const updatedTransactions = existingTransactions.map((t: Transaction) =>
-          t.id === transaction.id
+          t.id === transactionToEdit.id
             ? {
                 ...t,
                 amount,
@@ -140,6 +149,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       // Trigger real-time data refresh
       triggerDataRefresh();
       
+      onTransactionAdded();
       onClose();
     } catch (error) {
       console.error('Error saving transaction:', error);
