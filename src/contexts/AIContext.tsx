@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { type AISettings, type AIProviderType as AIProvider, type AIRequest } from '@/types/ai';
+import { type AISettings, type AIProvider as AIProviderInterface, type AIRequest } from '@/types/ai';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -9,7 +9,7 @@ interface AIContextType {
   settings: AISettings | null;
   loading: boolean;
   updateSettings: (settings: Partial<AISettings>) => Promise<void>;
-  testProvider: (provider: AIProvider) => Promise<boolean>;
+  testProvider: (provider: AIProviderInterface) => Promise<boolean>;
   makeAIRequest: (request: Omit<AIRequest, 'id' | 'timestamp' | 'duration' | 'status'>) => Promise<string>;
   getUsageStats: () => Promise<any>;
   isFeatureEnabled: (feature: keyof AISettings['features']) => boolean;
@@ -150,7 +150,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     }
   };
 
-  const testProvider = async (provider: AIProvider): Promise<boolean> => {
+  const testProvider = async (provider: AIProviderInterface): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke('test-ai-provider', {
         body: { provider }

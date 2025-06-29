@@ -80,3 +80,6 @@ export interface AISettings {
     maskSensitiveData: boolean;
   };
 }
+
+// Export type alias for backward compatibility
+export type AIProviderType = AIProvider;
