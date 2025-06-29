@@ -18,13 +18,12 @@ interface Transaction {
   category: string;
   description: string;
   transaction_date: string;
-  user_id: string;
+  user_id?: string; // Make user_id optional to handle different Transaction interfaces
 }
 
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type?: 'income' | 'expense';
   onTransactionAdded: () => void;
   transaction?: Transaction | null;
   mode?: 'add' | 'edit';
@@ -46,7 +45,6 @@ const categories = {
 export const TransactionModal: React.FC<TransactionModalProps> = ({
   isOpen,
   onClose,
-  type = 'expense',
   onTransactionAdded,
   transaction,
   mode = 'add',
@@ -55,7 +53,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const { getRemainingTransactions, subscription } = useSubscription();
   const [formData, setFormData] = useState({
     amount: '',
-    type: type as 'income' | 'expense',
+    type: 'expense' as 'income' | 'expense',
     category: '',
     description: '',
     transaction_date: new Date().toISOString().split('T')[0]
@@ -77,13 +75,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     } else {
       setFormData({
         amount: '',
-        type: type,
+        type: 'expense',
         category: '',
         description: '',
         transaction_date: new Date().toISOString().split('T')[0]
       });
     }
-  }, [transactionToEdit, mode, isOpen, type]);
+  }, [transactionToEdit, mode, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

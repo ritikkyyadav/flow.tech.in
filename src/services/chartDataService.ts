@@ -25,6 +25,11 @@ export interface IncomeExpenseData {
   net: number;
 }
 
+export interface ChartData {
+  monthlyData: IncomeExpenseData[];
+  categoryData: CategoryData[];
+}
+
 export class ChartDataService {
   private static colors = [
     '#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6',
@@ -93,6 +98,16 @@ export class ChartDataService {
       incomeChange,
       expenseChange,
       savingsRate
+    };
+  }
+
+  static prepareChartData(data: any): ChartData {
+    // Handle the case where data might have different structure
+    const transactions = data?.recentTransactions || data?.transactions || [];
+    
+    return {
+      monthlyData: this.prepareIncomeExpenseData(transactions),
+      categoryData: this.prepareCategoryData(transactions)
     };
   }
 

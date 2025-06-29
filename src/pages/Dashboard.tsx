@@ -21,12 +21,13 @@ const Dashboard = () => {
 
   // Calculate metrics for the enhanced cards
   const metrics = useMemo(() => {
-    return ChartDataService.calculateMetrics(data);
+    const transactions = data?.recentTransactions || [];
+    return ChartDataService.calculateMetrics(transactions);
   }, [data]);
 
   // Prepare chart data
   const chartData = useMemo(() => {
-    return ChartDataService.prepareChartData(data);
+    return ChartDataService.prepareChartData(data || {});
   }, [data]);
 
   const handleQuickAction = (action: string) => {
@@ -115,7 +116,7 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Transactions */}
-        <RecentTransactionsPanel transactions={data.recentTransactions} onRefresh={handleRefresh} />
+        <RecentTransactionsPanel transactions={data?.recentTransactions || []} onRefresh={handleRefresh} />
 
         {/* Usage Statistics for Starter Plan */}
         {subscription?.plan === 'starter' && (
@@ -131,12 +132,12 @@ const Dashboard = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Transactions this month</span>
-                    <span>{data.totalTransactions}/50</span>
+                    <span>{data?.totalTransactions || 0}/50</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full" 
-                      style={{ width: `${Math.min((data.totalTransactions / 50) * 100, 100)}%` }}
+                      style={{ width: `${Math.min(((data?.totalTransactions || 0) / 50) * 100, 100)}%` }}
                     ></div>
                   </div>
                 </div>
@@ -150,7 +151,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-              {data.totalTransactions >= 45 && (
+              {(data?.totalTransactions || 0) >= 45 && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                   <p className="text-sm text-yellow-800">
                     You're approaching your monthly transaction limit. 
