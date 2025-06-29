@@ -332,7 +332,6 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
         <TransactionModal
           isOpen={showTransactionModal}
           onClose={() => setShowTransactionModal(false)}
-          type="expense"
           onTransactionAdded={handleTransactionAdded}
         />
       )}

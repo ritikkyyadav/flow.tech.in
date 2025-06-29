@@ -135,7 +135,6 @@ export const TransactionManager = ({ onRefresh }: TransactionManagerProps) => {
         <TransactionModal
           isOpen={showTransactionModal}
           onClose={() => setShowTransactionModal(false)}
-          type={transactionType}
           onTransactionAdded={handleTransactionSaved}
         />
       )}

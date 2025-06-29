@@ -77,7 +77,6 @@ const Transactions = () => {
         <TransactionModal
           isOpen={showTransactionModal}
           onClose={() => setShowTransactionModal(false)}
-          type="expense"
           onTransactionAdded={handleTransactionSaved}
         />
       )}

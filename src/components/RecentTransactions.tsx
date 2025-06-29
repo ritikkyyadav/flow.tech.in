@@ -394,13 +394,13 @@ export const RecentTransactions = ({ refreshTrigger, filterType = 'all' }: Recen
           setShowEditModal(false);
           setEditingTransaction(null);
         }}
-        type={editingTransaction?.type || 'expense'}
         onTransactionAdded={() => {
           fetchTransactions();
           setShowEditModal(false);
           setEditingTransaction(null);
         }}
         editTransaction={editingTransaction}
+        mode="edit"
       />
     </>
   );
