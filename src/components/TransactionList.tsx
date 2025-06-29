@@ -543,7 +543,6 @@ export const TransactionList = ({ refreshTrigger, onRefresh }: TransactionListPr
           setShowEditModal(false);
           setEditingTransaction(null);
         }}
-        type={editingTransaction?.type || 'expense'}
         onTransactionAdded={() => {
           fetchTransactions();
           onRefresh?.();
@@ -551,6 +550,7 @@ export const TransactionList = ({ refreshTrigger, onRefresh }: TransactionListPr
           setEditingTransaction(null);
         }}
         editTransaction={editingTransaction}
+        mode="edit"
       />
     </>
   );
