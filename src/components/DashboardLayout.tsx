@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -112,12 +113,12 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         {/* Sidebar - Fixed positioning with proper z-index */}
         <aside 
           className={cn(
-            "bg-gradient-to-b from-blue-600 to-blue-800 text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen z-50",
+            "bg-gradient-to-b from-blue-600 to-orange-500 text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen z-50",
             isSidebarCollapsed ? "w-16" : "w-64"
           )}
         >
           {/* Logo */}
-          <div className="p-6 border-b border-blue-500/30 flex-shrink-0">
+          <div className="p-6 border-b border-white/20 flex-shrink-0">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 flex items-center justify-center">
                 <img 
@@ -128,8 +129,8 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
               </div>
               {!isSidebarCollapsed && (
                 <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-orange-300 to-blue-300 bg-clip-text text-transparent">Flow</h1>
-                  <p className="text-blue-200 text-sm">AI-Powered Finance</p>
+                  <h1 className="text-xl font-bold text-white">Flow</h1>
+                  <p className="text-white/80 text-sm">AI-Powered Finance</p>
                 </div>
               )}
             </div>
@@ -143,8 +144,8 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
                   <Button
                     variant={item.active ? "secondary" : "ghost"}
                     className={cn(
-                      "w-full justify-start text-white hover:bg-blue-500/30",
-                      item.active && "bg-blue-500/50 text-white",
+                      "w-full justify-start text-white hover:bg-white/20",
+                      item.active && "bg-white/20 text-white",
                       isSidebarCollapsed && "px-2"
                     )}
                     onClick={() => handleMenuClick(item.id)}
@@ -160,15 +161,15 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
           </nav>
 
           {/* User Profile */}
-          <div className="p-4 border-t border-blue-500/30 flex-shrink-0">
+          <div className="p-4 border-t border-white/20 flex-shrink-0">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 bg-blue-400/30 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4" />
               </div>
               {!isSidebarCollapsed && (
                 <div className="flex-1">
                   <p className="text-sm font-medium">{user?.email}</p>
-                  <p className="text-xs text-blue-200">User</p>
+                  <p className="text-xs text-white/80">User</p>
                 </div>
               )}
             </div>
@@ -176,7 +177,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start text-white hover:bg-blue-500/30"
+              className="w-full justify-start text-white hover:bg-white/20"
               onClick={handleSignOut}
             >
               <LogOut className="w-4 h-4" />

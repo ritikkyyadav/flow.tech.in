@@ -34,8 +34,8 @@ export const QuickActions = ({ onAction }: QuickActionsProps) => {
       id: 'ai-assistant',
       label: 'AI Assistant',
       icon: MessageSquare,
-      color: 'bg-purple-50 hover:bg-purple-100 border-purple-200',
-      iconColor: 'text-purple-600'
+      color: 'bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-700 hover:to-orange-600 text-white',
+      iconColor: 'text-white'
     }
   ];
 
@@ -48,11 +48,11 @@ export const QuickActions = ({ onAction }: QuickActionsProps) => {
             <Button
               key={action.id}
               variant="outline"
-              className={`h-20 flex-col space-y-2 ${action.color}`}
+              className={`h-20 flex-col space-y-2 ${action.color} ${action.id === 'ai-assistant' ? 'border-0' : ''}`}
               onClick={() => onAction(action.id)}
             >
               <action.icon className={`w-6 h-6 ${action.iconColor}`} />
-              <span className="text-sm font-medium text-gray-700">{action.label}</span>
+              <span className={`text-sm font-medium ${action.id === 'ai-assistant' ? 'text-white' : 'text-gray-700'}`}>{action.label}</span>
             </Button>
           ))}
         </div>
