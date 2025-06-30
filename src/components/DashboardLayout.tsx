@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -98,7 +97,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
   };
 
   const handleAromaClick = () => {
-    console.log('Aroma AI Assistant clicked');
+    console.log('Flow AI Assistant clicked');
     setShowAIAssistant(true);
   };
 
@@ -113,24 +112,24 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         {/* Sidebar - Fixed positioning with proper z-index */}
         <aside 
           className={cn(
-            "bg-black text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen z-50",
+            "bg-gradient-to-b from-blue-600 to-blue-800 text-white transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen z-50",
             isSidebarCollapsed ? "w-16" : "w-64"
           )}
         >
           {/* Logo */}
-          <div className="p-6 border-b border-gray-800 flex-shrink-0">
+          <div className="p-6 border-b border-blue-500/30 flex-shrink-0">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 flex items-center justify-center">
                 <img 
-                  src="/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png" 
-                  alt="Withu Logo" 
+                  src="/lovable-uploads/f270ce25-b700-4c54-b8a9-489a6d7cf9d3.png" 
+                  alt="Flow Logo" 
                   className="w-full h-full object-contain"
                 />
               </div>
               {!isSidebarCollapsed && (
                 <div>
-                  <h1 className="text-xl font-bold">Withu</h1>
-                  <p className="text-gray-400 text-sm">AI-Powered Finance</p>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-orange-300 to-blue-300 bg-clip-text text-transparent">Flow</h1>
+                  <p className="text-blue-200 text-sm">AI-Powered Finance</p>
                 </div>
               )}
             </div>
@@ -144,8 +143,8 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
                   <Button
                     variant={item.active ? "secondary" : "ghost"}
                     className={cn(
-                      "w-full justify-start text-white hover:bg-gray-800",
-                      item.active && "bg-gray-800",
+                      "w-full justify-start text-white hover:bg-blue-500/30",
+                      item.active && "bg-blue-500/50 text-white",
                       isSidebarCollapsed && "px-2"
                     )}
                     onClick={() => handleMenuClick(item.id)}
@@ -161,15 +160,15 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
           </nav>
 
           {/* User Profile */}
-          <div className="p-4 border-t border-gray-800 flex-shrink-0">
+          <div className="p-4 border-t border-blue-500/30 flex-shrink-0">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-400/30 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4" />
               </div>
               {!isSidebarCollapsed && (
                 <div className="flex-1">
                   <p className="text-sm font-medium">{user?.email}</p>
-                  <p className="text-xs text-gray-400">User</p>
+                  <p className="text-xs text-blue-200">User</p>
                 </div>
               )}
             </div>
@@ -177,7 +176,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start text-white hover:bg-gray-800"
+              className="w-full justify-start text-white hover:bg-blue-500/30"
               onClick={handleSignOut}
             >
               <LogOut className="w-4 h-4" />
@@ -208,7 +207,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
                   <List className="w-5 h-5" />
                 </Button>
                 <div>
-                  <h2 className="text-2xl font-bold text-black">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">
                     {menuItems.find(item => item.active)?.label || "Dashboard"}
                   </h2>
                   <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
@@ -217,7 +216,7 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
               
               <div className="flex items-center space-x-3">
                 <Button 
-                  className="bg-black text-white hover:bg-gray-800"
+                  className="bg-gradient-to-r from-blue-600 to-orange-500 text-white hover:from-blue-700 hover:to-orange-600"
                   onClick={() => handleMenuClick('transactions')}
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -225,11 +224,11 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="border-gray-300"
+                  className="border-blue-300 text-blue-600 hover:bg-blue-50"
                   onClick={handleAromaClick}
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
-                  Aroma
+                  Flow AI
                 </Button>
               </div>
             </div>
