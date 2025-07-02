@@ -45,6 +45,24 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Responsive spacing system */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+
+    /* Responsive font sizes */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
   }
 
   .dark {
@@ -89,16 +107,37 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Prevent text size adjustment on orientation change */
+    -webkit-text-size-adjust: 100%;
   }
 
   /* Mobile-first responsive typography */
   html {
-    font-size: clamp(14px, 2.5vw, 16px);
+    font-size: 14px;
+  }
+
+  @media (min-width: 480px) {
+    html {
+      font-size: 15px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    html {
+      font-size: 16px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      font-size: 16px;
+    }
   }
 
   /* Improve touch interactions */
   button, a, input, select, textarea {
     touch-action: manipulation;
+    min-height: 44px; /* WCAG AA compliance for touch targets */
   }
 
   /* Prevent text size adjustment on orientation change */
@@ -109,7 +148,7 @@
   }
 
   /* Hide scrollbars on mobile while keeping functionality */
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     ::-webkit-scrollbar {
       width: 0px;
       background: transparent;
@@ -135,11 +174,20 @@
     .safe-area-bottom {
       padding-bottom: max(env(safe-area-inset-bottom), 1rem);
     }
+
+    .safe-area-left {
+      padding-left: max(env(safe-area-inset-left), 1rem);
+    }
+
+    .safe-area-right {
+      padding-right: max(env(safe-area-inset-right), 1rem);
+    }
   }
 }
 
 /* Mobile-specific utilities */
 @layer utilities {
+  /* Touch interactions */
   .touch-callout-none {
     -webkit-touch-callout: none;
   }
@@ -160,6 +208,10 @@
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   }
   
+  .mobile-shadow-lg {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
   /* Mobile-optimized borders */
   .mobile-border {
     border: 0.5px solid rgba(0, 0, 0, 0.1);
@@ -175,5 +227,96 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Responsive spacing utilities */
+  .space-responsive {
+    @apply space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-6;
+  }
+
+  .padding-responsive {
+    @apply p-3 sm:p-4 md:p-6 lg:p-8;
+  }
+
+  .margin-responsive {
+    @apply m-3 sm:m-4 md:m-6 lg:m-8;
+  }
+
+  /* Grid utilities for responsive layouts */
+  .grid-responsive-cards {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6;
+  }
+
+  .grid-responsive-2col {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6;
+  }
+
+  /* Typography utilities */
+  .text-responsive {
+    @apply text-sm sm:text-base md:text-lg;
+  }
+
+  .heading-responsive {
+    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl;
+  }
+
+  /* Container utilities */
+  .container-responsive {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-tight {
+    @apply w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Button utilities */
+  .btn-responsive {
+    @apply px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3 text-sm sm:text-base;
+  }
+
+  /* Focus states for accessibility */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
+  }
+
+  /* Loading states */
+  .loading-skeleton {
+    @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
+  }
+
+  /* Card responsive */
+  .card-responsive {
+    @apply bg-card text-card-foreground border border-border rounded-lg mobile-shadow p-4 sm:p-6;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .flow-gradient {
+    background: #000;
+    color: #fff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
