@@ -15,6 +15,8 @@ serve(async (req) => {
   try {
     const { provider, model, prompt } = await req.json();
     
+    console.log('AI Request received:', { provider, model, prompt: prompt?.substring(0, 100) });
+    
     let response;
     let tokens = 0;
     let cost = 0;
@@ -22,11 +24,17 @@ serve(async (req) => {
     if (provider === 'google' || provider === 'gemini') {
       // Handle Google Gemini API
       const googleApiKey = Deno.env.get('GOOGLE_API_KEY');
+      console.log('Google API Key present:', !!googleApiKey);
+      
       if (!googleApiKey) {
+        console.error('Google API key not found in environment');
         throw new Error('Google API key not configured');
       }
 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-pro'}:generateContent?key=${googleApiKey}`;
+      const modelName = model || 'gemini-pro';
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${googleApiKey}`;
+      
+      console.log('Making request to Google API:', apiUrl);
       
       const apiResponse = await fetch(apiUrl, {
         method: 'POST',
@@ -48,15 +56,25 @@ serve(async (req) => {
         }),
       });
 
+      console.log('API Response status:', apiResponse.status);
+      
       if (!apiResponse.ok) {
-        const errorData = await apiResponse.json();
-        throw new Error(`Google API error: ${errorData.error?.message || 'Unknown error'}`);
+        const errorText = await apiResponse.text();
+        console.error('Google API error response:', errorText);
+        throw new Error(`Google API error: ${apiResponse.status} - ${errorText}`);
       }
 
       const data = await apiResponse.json();
+      console.log('API Response data:', JSON.stringify(data, null, 2));
       
       if (!data.candidates || data.candidates.length === 0) {
+        console.error('No candidates in response:', data);
         throw new Error('No response generated from Google API');
+      }
+
+      if (data.candidates[0].finishReason === 'SAFETY') {
+        console.error('Response blocked by safety filters');
+        throw new Error('Response was blocked by safety filters');
       }
 
       response = data.candidates[0].content.parts[0].text;
@@ -79,7 +97,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: model || 'gpt-3.5-turbo',
+          model: model || 'gpt-4o-mini',
           messages: [
             { role: 'user', content: prompt }
           ],
@@ -96,12 +114,14 @@ serve(async (req) => {
       const data = await apiResponse.json();
       response = data.choices[0].message.content;
       tokens = data.usage.total_tokens;
-      cost = tokens * 0.002 / 1000; // Rough cost estimate for GPT-3.5-turbo
+      cost = tokens * 0.002 / 1000; // Rough cost estimate for GPT-4o-mini
       
     } else {
       throw new Error(`Unsupported provider: ${provider}`);
     }
 
+    console.log('AI Response generated successfully');
+    
     return new Response(JSON.stringify({ 
       response, 
       tokens, 
@@ -114,7 +134,8 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in ai-request function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message 
+      error: error.message,
+      details: error.stack
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

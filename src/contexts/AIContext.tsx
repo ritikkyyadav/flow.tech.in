@@ -26,13 +26,13 @@ export const useAI = () => {
 };
 
 const defaultAISettings: AISettings = {
-  globalEnabled: true, // Enable by default since we have Google API key
+  globalEnabled: true,
   providers: [
     {
       id: 'google',
       name: 'Google Gemini',
       type: 'google',
-      status: 'connected', // Set as connected by default
+      status: 'connected',
       models: [
         { 
           id: 'gemini-pro', 
@@ -115,6 +115,10 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   useEffect(() => {
     if (user) {
       loadAISettings();
+    } else {
+      // Set default settings when no user is logged in
+      setSettings(defaultAISettings);
+      setLoading(false);
     }
   }, [user]);
 
@@ -133,7 +137,6 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       if (data) {
         setSettings(data.settings as unknown as AISettings);
       } else {
-        // Initialize with default settings that include Google provider
         setSettings(defaultAISettings);
         // Auto-save the default settings
         await supabase
@@ -201,6 +204,8 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     const startTime = Date.now();
     
     try {
+      console.log('Making AI request:', request);
+      
       const { data, error } = await supabase.functions.invoke('ai-request', {
         body: {
           provider: 'google',
@@ -209,33 +214,45 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      if (!data || !data.response) {
+        console.error('Invalid response data:', data);
+        throw new Error('Invalid response from AI service');
+      }
 
       // Log the request for analytics
-      await supabase.from('ai_requests').insert({
-        user_id: user?.id,
-        provider: 'google',
-        model: 'gemini-pro',
-        tokens: data.tokens || 0,
-        cost: data.cost || 0,
-        duration: Date.now() - startTime,
-        status: 'success'
-      });
+      if (user) {
+        await supabase.from('ai_requests').insert({
+          user_id: user.id,
+          provider: 'google',
+          model: 'gemini-pro',
+          tokens: data.tokens || 0,
+          cost: data.cost || 0,
+          duration: Date.now() - startTime,
+          status: 'success'
+        });
+      }
 
       return data.response;
     } catch (error) {
       console.error('AI Request error:', error);
       
       // Log the error
-      await supabase.from('ai_requests').insert({
-        user_id: user?.id,
-        provider: 'google',
-        model: 'gemini-pro',
-        tokens: 0,
-        cost: 0,
-        duration: Date.now() - startTime,
-        status: 'error'
-      });
+      if (user) {
+        await supabase.from('ai_requests').insert({
+          user_id: user.id,
+          provider: 'google',
+          model: 'gemini-pro',
+          tokens: 0,
+          cost: 0,
+          duration: Date.now() - startTime,
+          status: 'error'
+        });
+      }
 
       throw error;
     }
