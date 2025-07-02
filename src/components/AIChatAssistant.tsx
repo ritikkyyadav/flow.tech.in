@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Send, Bot, User } from "lucide-react";
+import { useAI } from "@/contexts/AIContext";
 
 interface Message {
   id: string;
@@ -19,15 +20,17 @@ interface AIChatAssistantProps {
 }
 
 export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
+  const { makeAIRequest, isFeatureEnabled } = useAI();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'ai',
-      content: 'Hello! I\'m your AI financial assistant. I can help you with expense tracking, budget planning, financial insights, and answer questions about your finances. How can I assist you today?',
+      content: 'Hello! I\'m Flow AI, your intelligent financial assistant powered by Google Gemini. I can help you with expense tracking, budget planning, financial insights, and answer questions about your finances. How can I assist you today?',
       timestamp: new Date()
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const predefinedQuestions = [
     "How much did I spend on food this month?",
@@ -36,8 +39,8 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
     "Show me my expense trends"
   ];
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -47,22 +50,53 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
+    try {
+      if (isFeatureEnabled('chatAssistant')) {
+        // Use actual AI request with Google Gemini
+        const aiResponse = await makeAIRequest({
+          prompt: `You are Flow AI, a financial assistant. The user asks: "${inputMessage}". Provide helpful financial advice and insights. Keep responses concise and actionable.`,
+          provider: 'google',
+          model: 'gemini-pro',
+          tokens: 0,
+          cost: 0
+        });
+
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: aiResponse,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        // Fallback response when AI is not enabled
+        const fallbackResponse = generateFallbackResponse(inputMessage);
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: fallbackResponse,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      }
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: generateAIResponse(inputMessage),
+        content: 'I apologize, but I encountered an issue processing your request. Please try again or contact support if the problem persists.',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
-
-    setInputMessage('');
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const generateAIResponse = (userInput: string): string => {
+  const generateFallbackResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
     if (input.includes('food') || input.includes('eat')) {
@@ -88,18 +122,22 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-black flex items-center">
             <MessageSquare className="w-5 h-5 mr-2" />
-            AI Financial Assistant
+            Flow AI Assistant
+            {isFeatureEnabled('chatAssistant') && (
+              <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                Powered by Gemini
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
         
         <div className="flex-1 flex flex-col space-y-4">
-          {/* Chat Messages */}
           <ScrollArea className="flex-1 pr-4">
             <div className="space-y-4">
               {messages.map((message) => (
                 <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`flex items-start space-x-2 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                    <div className={`p-2 rounded-full ${message.type === 'user' ? 'bg-black' : 'bg-gray-200'}`}>
+                    <div className={`p-2 rounded-full ${message.type === 'user' ? 'bg-gradient-to-r from-blue-600 to-orange-500' : 'bg-gray-200'}`}>
                       {message.type === 'user' ? (
                         <User className="w-4 h-4 text-white" />
                       ) : (
@@ -108,7 +146,7 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                     </div>
                     <div className={`p-3 rounded-lg ${
                       message.type === 'user' 
-                        ? 'bg-black text-white' 
+                        ? 'bg-gradient-to-r from-blue-600 to-orange-500 text-white' 
                         : 'bg-gray-100 text-black'
                     }`}>
                       <p className="text-sm">{message.content}</p>
@@ -116,10 +154,26 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                   </div>
                 </div>
               ))}
+              
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="flex items-start space-x-2 max-w-[80%]">
+                    <div className="p-2 rounded-full bg-gray-200">
+                      <Bot className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div className="p-3 rounded-lg bg-gray-100 text-black">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
 
-          {/* Quick Questions */}
           <div className="space-y-2">
             <p className="text-sm text-gray-600">Quick questions:</p>
             <div className="grid grid-cols-2 gap-2">
@@ -130,6 +184,7 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                   size="sm"
                   className="text-xs text-left justify-start h-auto p-2"
                   onClick={() => handleQuickQuestion(question)}
+                  disabled={isLoading}
                 >
                   {question}
                 </Button>
@@ -137,16 +192,20 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
             </div>
           </div>
 
-          {/* Message Input */}
           <div className="flex space-x-2">
             <Input
               placeholder="Ask me anything about your finances..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
               className="flex-1"
+              disabled={isLoading}
             />
-            <Button onClick={handleSendMessage} className="bg-black text-white hover:bg-gray-800">
+            <Button 
+              onClick={handleSendMessage} 
+              className="bg-gradient-to-r from-blue-600 to-orange-500 text-white hover:from-blue-700 hover:to-orange-600"
+              disabled={isLoading}
+            >
               <Send className="w-4 h-4" />
             </Button>
           </div>

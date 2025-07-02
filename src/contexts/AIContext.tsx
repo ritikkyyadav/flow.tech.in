@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { type AISettings, type AIProvider as AIProviderInterface, type AIRequest } from '@/types/ai';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/use-auth';
 import { toast } from '@/hooks/use-toast';
 
 interface AIContextType {
@@ -26,46 +26,76 @@ export const useAI = () => {
 };
 
 const defaultAISettings: AISettings = {
-  globalEnabled: false,
-  providers: [],
+  globalEnabled: true, // Enable by default since we have Google API key
+  providers: [
+    {
+      id: 'google',
+      name: 'Google Gemini',
+      type: 'google',
+      status: 'connected', // Set as connected by default
+      models: [
+        { 
+          id: 'gemini-pro', 
+          name: 'Gemini Pro', 
+          type: 'chat', 
+          costPer1kTokens: 0.00025, 
+          maxTokens: 32000, 
+          capabilities: ['chat', 'vision', 'analysis'] 
+        }
+      ],
+      usage: {
+        totalCalls: 0,
+        totalTokens: 0,
+        totalCost: 0,
+        lastUsed: '',
+        monthlyUsage: { calls: 0, tokens: 0, cost: 0 }
+      },
+      config: {
+        temperature: 0.7,
+        maxTokens: 4000,
+        timeout: 30000,
+        retries: 3
+      }
+    }
+  ],
   features: {
     transactionCategorization: {
-      enabled: false,
-      primaryProvider: '',
+      enabled: true,
+      primaryProvider: 'google',
       fallbackProviders: [],
-      model: '',
+      model: 'gemini-pro',
       confidence: 0.8,
       maxCost: 0.01
     },
     financialInsights: {
-      enabled: false,
-      primaryProvider: '',
+      enabled: true,
+      primaryProvider: 'google',
       fallbackProviders: [],
-      model: '',
+      model: 'gemini-pro',
       confidence: 0.9,
       maxCost: 0.05
     },
     chatAssistant: {
-      enabled: false,
-      primaryProvider: '',
+      enabled: true,
+      primaryProvider: 'google',
       fallbackProviders: [],
-      model: '',
+      model: 'gemini-pro',
       confidence: 0.7,
       maxCost: 0.02
     },
     documentProcessing: {
-      enabled: false,
-      primaryProvider: '',
+      enabled: true,
+      primaryProvider: 'google',
       fallbackProviders: [],
-      model: '',
+      model: 'gemini-pro',
       confidence: 0.85,
       maxCost: 0.03
     },
     forecasting: {
-      enabled: false,
-      primaryProvider: '',
+      enabled: true,
+      primaryProvider: 'google',
       fallbackProviders: [],
-      model: '',
+      model: 'gemini-pro',
       confidence: 0.9,
       maxCost: 0.1
     }
@@ -101,19 +131,22 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       }
 
       if (data) {
-        // Properly cast the JSON data to AISettings
         setSettings(data.settings as unknown as AISettings);
       } else {
+        // Initialize with default settings that include Google provider
         setSettings(defaultAISettings);
+        // Auto-save the default settings
+        await supabase
+          .from('ai_settings')
+          .upsert({
+            user_id: user?.id,
+            settings: defaultAISettings as any,
+            updated_at: new Date().toISOString()
+          });
       }
     } catch (error) {
       console.error('Error loading AI settings:', error);
       setSettings(defaultAISettings);
-      toast({
-        title: "Error",
-        description: "Failed to load AI settings",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -129,7 +162,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         .from('ai_settings')
         .upsert({
           user_id: user.id,
-          settings: updatedSettings as any, // Cast to any to satisfy Json type
+          settings: updatedSettings as any,
           updated_at: new Date().toISOString()
         });
 
@@ -153,7 +186,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const testProvider = async (provider: AIProviderInterface): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke('test-ai-provider', {
-        body: { provider }
+        body: { provider: { ...provider, type: 'google' } }
       });
 
       if (error) throw error;
@@ -169,7 +202,11 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     
     try {
       const { data, error } = await supabase.functions.invoke('ai-request', {
-        body: request
+        body: {
+          provider: 'google',
+          model: 'gemini-pro',
+          prompt: request.prompt
+        }
       });
 
       if (error) throw error;
@@ -177,21 +214,23 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       // Log the request for analytics
       await supabase.from('ai_requests').insert({
         user_id: user?.id,
-        provider: request.provider,
-        model: request.model,
-        tokens: data.tokens,
-        cost: data.cost,
+        provider: 'google',
+        model: 'gemini-pro',
+        tokens: data.tokens || 0,
+        cost: data.cost || 0,
         duration: Date.now() - startTime,
         status: 'success'
       });
 
       return data.response;
     } catch (error) {
+      console.error('AI Request error:', error);
+      
       // Log the error
       await supabase.from('ai_requests').insert({
         user_id: user?.id,
-        provider: request.provider,
-        model: request.model,
+        provider: 'google',
+        model: 'gemini-pro',
         tokens: 0,
         cost: 0,
         duration: Date.now() - startTime,
