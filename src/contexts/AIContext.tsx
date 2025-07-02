@@ -35,8 +35,8 @@ const defaultAISettings: AISettings = {
       status: 'connected',
       models: [
         { 
-          id: 'gemini-pro', 
-          name: 'Gemini Pro', 
+          id: 'gemini-1.5-flash', 
+          name: 'Gemini 1.5 Flash', 
           type: 'chat', 
           costPer1kTokens: 0.00025, 
           maxTokens: 32000, 
@@ -63,7 +63,7 @@ const defaultAISettings: AISettings = {
       enabled: true,
       primaryProvider: 'google',
       fallbackProviders: [],
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash',
       confidence: 0.8,
       maxCost: 0.01
     },
@@ -71,7 +71,7 @@ const defaultAISettings: AISettings = {
       enabled: true,
       primaryProvider: 'google',
       fallbackProviders: [],
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash',
       confidence: 0.9,
       maxCost: 0.05
     },
@@ -79,7 +79,7 @@ const defaultAISettings: AISettings = {
       enabled: true,
       primaryProvider: 'google',
       fallbackProviders: [],
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash',
       confidence: 0.7,
       maxCost: 0.02
     },
@@ -87,7 +87,7 @@ const defaultAISettings: AISettings = {
       enabled: true,
       primaryProvider: 'google',
       fallbackProviders: [],
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash',
       confidence: 0.85,
       maxCost: 0.03
     },
@@ -95,7 +95,7 @@ const defaultAISettings: AISettings = {
       enabled: true,
       primaryProvider: 'google',
       fallbackProviders: [],
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash',
       confidence: 0.9,
       maxCost: 0.1
     }
@@ -116,7 +116,6 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     if (user) {
       loadAISettings();
     } else {
-      // Set default settings when no user is logged in
       setSettings(defaultAISettings);
       setLoading(false);
     }
@@ -138,7 +137,6 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         setSettings(data.settings as unknown as AISettings);
       } else {
         setSettings(defaultAISettings);
-        // Auto-save the default settings
         await supabase
           .from('ai_settings')
           .upsert({
@@ -209,32 +207,46 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       const { data, error } = await supabase.functions.invoke('ai-request', {
         body: {
           provider: 'google',
-          model: 'gemini-pro',
+          model: 'gemini-1.5-flash',
           prompt: request.prompt
         }
       });
 
       if (error) {
         console.error('Supabase function error:', error);
-        throw error;
+        throw new Error(`AI request failed: ${error.message}`);
       }
 
-      if (!data || !data.response) {
+      if (!data) {
+        console.error('No data returned from AI service');
+        throw new Error('No response from AI service');
+      }
+
+      if (data.error) {
+        console.error('AI service returned an error:', data.error);
+        throw new Error(data.error);
+      }
+
+      if (!data.response) {
         console.error('Invalid response data:', data);
         throw new Error('Invalid response from AI service');
       }
 
       // Log the request for analytics
       if (user) {
-        await supabase.from('ai_requests').insert({
-          user_id: user.id,
-          provider: 'google',
-          model: 'gemini-pro',
-          tokens: data.tokens || 0,
-          cost: data.cost || 0,
-          duration: Date.now() - startTime,
-          status: 'success'
-        });
+        try {
+          await supabase.from('ai_requests').insert({
+            user_id: user.id,
+            provider: 'google',
+            model: 'gemini-1.5-flash',
+            tokens: data.tokens || 0,
+            cost: data.cost || 0,
+            duration: Date.now() - startTime,
+            status: 'success'
+          });
+        } catch (logError) {
+          console.warn('Failed to log AI request:', logError);
+        }
       }
 
       return data.response;
@@ -243,15 +255,19 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       
       // Log the error
       if (user) {
-        await supabase.from('ai_requests').insert({
-          user_id: user.id,
-          provider: 'google',
-          model: 'gemini-pro',
-          tokens: 0,
-          cost: 0,
-          duration: Date.now() - startTime,
-          status: 'error'
-        });
+        try {
+          await supabase.from('ai_requests').insert({
+            user_id: user.id,
+            provider: 'google',
+            model: 'gemini-1.5-flash',
+            tokens: 0,
+            cost: 0,
+            duration: Date.now() - startTime,
+            status: 'error'
+          });
+        } catch (logError) {
+          console.warn('Failed to log AI request error:', logError);
+        }
       }
 
       throw error;

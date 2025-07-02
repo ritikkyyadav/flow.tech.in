@@ -22,72 +22,123 @@ serve(async (req) => {
     let cost = 0;
 
     if (provider === 'google' || provider === 'gemini') {
-      // Handle Google Gemini API
       const googleApiKey = Deno.env.get('GOOGLE_API_KEY');
       console.log('Google API Key present:', !!googleApiKey);
       
       if (!googleApiKey) {
         console.error('Google API key not found in environment');
-        throw new Error('Google API key not configured');
+        return new Response(JSON.stringify({ 
+          error: 'Google API key not configured',
+          details: 'Please configure GOOGLE_API_KEY in environment variables'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
-      const modelName = model || 'gemini-pro';
+      const modelName = model || 'gemini-1.5-flash';
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${googleApiKey}`;
       
       console.log('Making request to Google API:', apiUrl);
       
-      const apiResponse = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 2048,
-          }
-        }),
-      });
+      try {
+        const apiResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: prompt
+              }]
+            }],
+            generationConfig: {
+              temperature: 0.7,
+              topK: 40,
+              topP: 0.95,
+              maxOutputTokens: 2048,
+            }
+          }),
+        });
 
-      console.log('API Response status:', apiResponse.status);
-      
-      if (!apiResponse.ok) {
-        const errorText = await apiResponse.text();
-        console.error('Google API error response:', errorText);
-        throw new Error(`Google API error: ${apiResponse.status} - ${errorText}`);
+        console.log('API Response status:', apiResponse.status);
+        
+        if (!apiResponse.ok) {
+          const errorText = await apiResponse.text();
+          console.error('Google API error response:', errorText);
+          return new Response(JSON.stringify({ 
+            error: `Google API error: ${apiResponse.status}`,
+            details: errorText
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        const data = await apiResponse.json();
+        console.log('API Response data:', JSON.stringify(data, null, 2));
+        
+        if (!data.candidates || data.candidates.length === 0) {
+          console.error('No candidates in response:', data);
+          return new Response(JSON.stringify({ 
+            error: 'No response generated from Google API',
+            details: 'The API did not return any candidates'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        if (data.candidates[0].finishReason === 'SAFETY') {
+          console.error('Response blocked by safety filters');
+          return new Response(JSON.stringify({ 
+            error: 'Response was blocked by safety filters',
+            details: 'Please try rephrasing your request'
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        if (!data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0]) {
+          console.error('Invalid response structure:', data.candidates[0]);
+          return new Response(JSON.stringify({ 
+            error: 'Invalid response structure from Google API',
+            details: 'Response does not contain expected content structure'
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        response = data.candidates[0].content.parts[0].text;
+        
+        // Estimate tokens (rough approximation)
+        tokens = Math.ceil((prompt.length + response.length) / 4);
+        cost = tokens * 0.00025 / 1000; // Rough cost estimate for Gemini
+        
+      } catch (fetchError) {
+        console.error('Error calling Google API:', fetchError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to call Google API',
+          details: fetchError.message
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
-
-      const data = await apiResponse.json();
-      console.log('API Response data:', JSON.stringify(data, null, 2));
-      
-      if (!data.candidates || data.candidates.length === 0) {
-        console.error('No candidates in response:', data);
-        throw new Error('No response generated from Google API');
-      }
-
-      if (data.candidates[0].finishReason === 'SAFETY') {
-        console.error('Response blocked by safety filters');
-        throw new Error('Response was blocked by safety filters');
-      }
-
-      response = data.candidates[0].content.parts[0].text;
-      
-      // Estimate tokens (rough approximation)
-      tokens = Math.ceil((prompt.length + response.length) / 4);
-      cost = tokens * 0.00025 / 1000; // Rough cost estimate for Gemini Pro
       
     } else if (provider === 'openai') {
-      // Handle OpenAI API
       const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
       if (!openaiApiKey) {
-        throw new Error('OpenAI API key not configured');
+        return new Response(JSON.stringify({ 
+          error: 'OpenAI API key not configured',
+          details: 'Please configure OPENAI_API_KEY in environment variables'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       const apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -108,7 +159,13 @@ serve(async (req) => {
 
       if (!apiResponse.ok) {
         const errorData = await apiResponse.json();
-        throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+        return new Response(JSON.stringify({ 
+          error: `OpenAI API error: ${errorData.error?.message || 'Unknown error'}`,
+          details: errorData
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       const data = await apiResponse.json();
@@ -117,7 +174,13 @@ serve(async (req) => {
       cost = tokens * 0.002 / 1000; // Rough cost estimate for GPT-4o-mini
       
     } else {
-      throw new Error(`Unsupported provider: ${provider}`);
+      return new Response(JSON.stringify({ 
+        error: `Unsupported provider: ${provider}`,
+        details: 'Supported providers are: google, gemini, openai'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log('AI Response generated successfully');
@@ -134,8 +197,8 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in ai-request function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
-      details: error.stack
+      error: error.message || 'Internal server error',
+      details: error.stack || 'Unknown error occurred'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
