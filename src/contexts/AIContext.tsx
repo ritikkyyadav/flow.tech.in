@@ -212,8 +212,14 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         }
       });
 
+      console.log('AI Request response:', { data, error });
+
       if (error) {
         console.error('Supabase function error:', error);
+        // Check if it's a configuration error
+        if (error.message?.includes('Google API key not configured')) {
+          throw new Error('Google API key is not configured. Please configure the GOOGLE_API_KEY in Supabase Edge Function Secrets.');
+        }
         throw new Error(`AI request failed: ${error.message}`);
       }
 
@@ -224,6 +230,10 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
       if (data.error) {
         console.error('AI service returned an error:', data.error);
+        // Check for specific API key errors
+        if (data.error.includes('Google API key not configured')) {
+          throw new Error('Google API key is not configured. Please configure the GOOGLE_API_KEY in Supabase Edge Function Secrets.');
+        }
         throw new Error(data.error);
       }
 
