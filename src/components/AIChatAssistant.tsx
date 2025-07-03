@@ -1,11 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Send, Bot, User } from "lucide-react";
+import { MessageSquare, Send, Bot, User, Trash2 } from "lucide-react";
 import { useAI } from "@/contexts/AIContext";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Message {
   id: string;
@@ -21,6 +22,10 @@ interface AIChatAssistantProps {
 
 export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
   const { makeAIRequest, isFeatureEnabled } = useAI();
+  const { user } = useAuth();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -39,6 +44,61 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
     "Show me my expense trends"
   ];
 
+  // Auto-scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Load chat history when component mounts
+  useEffect(() => {
+    if (isOpen && user) {
+      loadChatHistory();
+    }
+  }, [isOpen, user]);
+
+  // Save chat history to localStorage
+  const saveChatHistory = (newMessages: Message[]) => {
+    if (user) {
+      const chatKey = `flow-ai-chat-${user.id}`;
+      localStorage.setItem(chatKey, JSON.stringify(newMessages));
+    }
+  };
+
+  // Load chat history from localStorage
+  const loadChatHistory = () => {
+    if (user) {
+      const chatKey = `flow-ai-chat-${user.id}`;
+      const savedHistory = localStorage.getItem(chatKey);
+      if (savedHistory) {
+        try {
+          const parsedHistory = JSON.parse(savedHistory);
+          setMessages(parsedHistory);
+        } catch (error) {
+          console.error('Error loading chat history:', error);
+        }
+      }
+    }
+  };
+
+  // Clear chat history
+  const clearChatHistory = () => {
+    const initialMessage = {
+      id: '1',
+      type: 'ai' as const,
+      content: 'Hello! I\'m Flow AI, your intelligent financial assistant powered by Google Gemini. I can help you with expense tracking, budget planning, financial insights, and answer questions about your finances. How can I assist you today?',
+      timestamp: new Date()
+    };
+    setMessages([initialMessage]);
+    if (user) {
+      const chatKey = `flow-ai-chat-${user.id}`;
+      localStorage.removeItem(chatKey);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -49,7 +109,11 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => {
+      const newMessages = [...prev, userMessage];
+      saveChatHistory(newMessages);
+      return newMessages;
+    });
     setInputMessage('');
     setIsLoading(true);
 
@@ -70,7 +134,11 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
           content: aiResponse,
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, aiMessage]);
+        setMessages(prev => {
+          const newMessages = [...prev, aiMessage];
+          saveChatHistory(newMessages);
+          return newMessages;
+        });
       } else {
         // Fallback response when AI is not enabled
         const fallbackResponse = generateFallbackResponse(inputMessage);
@@ -80,7 +148,11 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
           content: fallbackResponse,
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, aiMessage]);
+        setMessages(prev => {
+          const newMessages = [...prev, aiMessage];
+          saveChatHistory(newMessages);
+          return newMessages;
+        });
       }
     } catch (error) {
       console.error('Error getting AI response:', error);
@@ -90,7 +162,11 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
         content: 'I apologize, but I encountered an issue processing your request. Please try again or contact support if the problem persists.',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => {
+        const newMessages = [...prev, errorMessage];
+        saveChatHistory(newMessages);
+        return newMessages;
+      });
     } finally {
       setIsLoading(false);
     }
@@ -120,14 +196,25 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl h-[600px] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-black flex items-center">
-            <MessageSquare className="w-5 h-5 mr-2" />
-            Flow AI Assistant
-            {isFeatureEnabled('chatAssistant') && (
-              <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                Powered by Gemini
-              </span>
-            )}
+          <DialogTitle className="text-xl font-semibold text-black flex items-center justify-between">
+            <div className="flex items-center">
+              <MessageSquare className="w-5 h-5 mr-2" />
+              Flow AI Assistant
+              {isFeatureEnabled('chatAssistant') && (
+                <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                  Powered by Gemini
+                </span>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearChatHistory}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              title="Clear chat history"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
           </DialogTitle>
         </DialogHeader>
         
@@ -171,6 +258,8 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                   </div>
                 </div>
               )}
+              {/* Scroll anchor */}
+              <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
 
