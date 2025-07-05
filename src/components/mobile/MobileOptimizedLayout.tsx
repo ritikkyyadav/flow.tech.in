@@ -31,7 +31,7 @@ export const MobileOptimizedLayout = ({
   // Mobile Layout (< 768px)
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-gray-50 overflow-x-hidden safe-area-top">
+      <div className="min-h-screen bg-gray-50 overflow-x-hidden">
         <MobileHeader 
           title={title} 
           showBack={showBackButton}
@@ -45,8 +45,8 @@ export const MobileOptimizedLayout = ({
         />
         
         {/* Main content with proper spacing for mobile */}
-        <main className="pt-14 pb-20 min-h-screen">
-          <div className="px-4 py-4 max-w-full">
+        <main className="pt-16 pb-20 min-h-screen">
+          <div className="px-3 py-4 max-w-full">
             {children}
           </div>
         </main>
@@ -71,7 +71,7 @@ export const MobileOptimizedLayout = ({
                     alt="Flow Logo" 
                     className="w-8 h-8"
                   />
-                  <h1 className="text-xl font-bold flow-gradient-text">Flow</h1>
+                  <h1 className="text-xl font-bold text-blue-600">Flow</h1>
                 </div>
                 <div className="h-6 w-px bg-gray-300" />
                 <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
@@ -105,7 +105,7 @@ export const MobileOptimizedLayout = ({
                   className="w-10 h-10"
                 />
                 <div>
-                  <h1 className="text-xl font-bold flow-gradient-text">Flow</h1>
+                  <h1 className="text-xl font-bold text-blue-600">Flow</h1>
                   <p className="text-xs text-gray-500">AI-Powered Finance</p>
                 </div>
               </div>
