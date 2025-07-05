@@ -37,59 +37,8 @@ const Transactions = () => {
     handleRefresh();
   };
 
-  // Mobile header actions
-  const mobileHeaderActions = (
-    <div className="flex items-center gap-2">
-      <MobileButton 
-        onClick={handleAIAssistant}
-        variant="outline"
-        size="sm"
-        className="border-blue-300 text-blue-600 hover:bg-blue-50"
-      >
-        <MessageSquare className="w-4 h-4" />
-        {!isMobile && <span className="ml-1">Flow AI</span>}
-      </MobileButton>
-      <MobileButton 
-        onClick={handleQuickAdd}
-        variant="primary"
-        size="sm"
-      >
-        <Plus className="w-4 h-4" />
-        {!isMobile && <span className="ml-1">Quick Add</span>}
-      </MobileButton>
-    </div>
-  );
-
-  // Desktop header actions
-  const desktopHeaderActions = (
-    <div className="flex items-center space-x-3">
-      <MobileButton 
-        variant="outline" 
-        className="border-blue-300 text-blue-600 hover:bg-blue-50"
-        onClick={handleAIAssistant}
-      >
-        <MessageSquare className="w-4 h-4 mr-2" />
-        Flow AI
-      </MobileButton>
-      <MobileButton 
-        onClick={handleQuickAdd}
-        variant="primary"
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Quick Add
-      </MobileButton>
-    </div>
-  );
-
   const content = (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Transactions</h1>
-          <p className="text-sm sm:text-base text-gray-600">Manage your income and expenses</p>
-        </div>
-      </div>
-
       <Tabs defaultValue="manager" className="w-full">
         <TabsList className={cn(
           "grid w-full",
@@ -210,7 +159,25 @@ const Transactions = () => {
       <MobileOptimizedLayout 
         title="Transactions" 
         activeTab="transactions" 
-        headerActions={mobileHeaderActions}
+        headerActions={
+          <div className="flex items-center gap-2">
+            <MobileButton 
+              onClick={handleAIAssistant}
+              variant="outline"
+              size="sm"
+              className="border-blue-300 text-blue-600 hover:bg-blue-50"
+            >
+              <MessageSquare className="w-4 h-4" />
+            </MobileButton>
+            <MobileButton 
+              onClick={handleQuickAdd}
+              variant="primary"
+              size="sm"
+            >
+              <Plus className="w-4 h-4" />
+            </MobileButton>
+          </div>
+        }
       >
         {content}
       </MobileOptimizedLayout>
@@ -226,7 +193,23 @@ const Transactions = () => {
             <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
             <p className="text-gray-600">Manage your income and expenses</p>
           </div>
-          {desktopHeaderActions}
+          <div className="flex items-center space-x-3">
+            <MobileButton 
+              variant="outline" 
+              className="border-blue-300 text-blue-600 hover:bg-blue-50"
+              onClick={handleAIAssistant}
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Flow AI
+            </MobileButton>
+            <MobileButton 
+              onClick={handleQuickAdd}
+              variant="primary"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Quick Add
+            </MobileButton>
+          </div>
         </div>
         {content}
       </div>

@@ -73,7 +73,12 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
       if (savedHistory) {
         try {
           const parsedHistory = JSON.parse(savedHistory);
-          setMessages(parsedHistory);
+          // Ensure timestamps are Date objects
+          const messagesWithDates = parsedHistory.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+          setMessages(messagesWithDates);
         } catch (error) {
           console.error('Error loading chat history:', error);
         }
@@ -205,20 +210,23 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
   };
 
   const formatTime = (timestamp: Date) => {
-    return timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    // Ensure timestamp is a Date object
+    const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatDate = (timestamp: Date) => {
+    const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     
-    if (timestamp.toDateString() === today.toDateString()) {
+    if (date.toDateString() === today.toDateString()) {
       return 'Today';
-    } else if (timestamp.toDateString() === yesterday.toDateString()) {
+    } else if (date.toDateString() === yesterday.toDateString()) {
       return 'Yesterday';
     } else {
-      return timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
   };
 
