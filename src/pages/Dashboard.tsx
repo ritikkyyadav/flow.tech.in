@@ -1,5 +1,5 @@
 
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { MobileOptimizedLayout } from "@/components/mobile/MobileOptimizedLayout";
 import { EnhancedFinancialOverviewCards } from "@/components/dashboard/EnhancedFinancialOverviewCards";
 import { FixedIncomeExpenseChart } from "@/components/dashboard/FixedIncomeExpenseChart";
 import { FixedCategoryChart } from "@/components/dashboard/FixedCategoryChart";
@@ -9,15 +9,17 @@ import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { useSubscription } from "@/hooks/useSubscription";
 import { ChartDataService } from "@/services/chartDataService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { MobileButton } from "@/components/mobile/MobileFormComponents";
 import { Crown, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMemo } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
   const { data, isLoading, refreshData } = useRealTimeData();
   const { subscription, limits, upgradeRequired } = useSubscription();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Calculate metrics for the enhanced cards
   const metrics = useMemo(() => {
@@ -42,7 +44,6 @@ const Dashboard = () => {
         navigate('/invoices');
         break;
       case 'ai-assistant':
-        // This would open the AI assistant
         console.log('Opening AI assistant...');
         break;
       default:
@@ -56,48 +57,48 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout activeTab="dashboard">
-        <div className="p-4 lg:p-6">
-          <div className="animate-pulse space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-gray-200 h-32 rounded-lg"></div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-gray-200 h-80 rounded-lg"></div>
-              <div className="bg-gray-200 h-80 rounded-lg"></div>
-            </div>
+      <MobileOptimizedLayout title="Dashboard" activeTab="dashboard">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-gray-200 h-32 rounded-lg animate-pulse"></div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="bg-gray-200 h-80 rounded-lg animate-pulse"></div>
+            <div className="bg-gray-200 h-80 rounded-lg animate-pulse"></div>
           </div>
         </div>
-      </DashboardLayout>
+      </MobileOptimizedLayout>
     );
   }
 
   return (
-    <DashboardLayout activeTab="dashboard">
-      <div className="p-4 lg:p-6 space-y-6">
+    <MobileOptimizedLayout title="Dashboard" activeTab="dashboard">
+      <div className="space-y-4 sm:space-y-6">
         {/* Subscription Status Banner */}
         {subscription?.plan === 'starter' && (
           <Card className="border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center space-x-3">
-                  <Zap className="w-8 h-8 text-yellow-500" />
+                  <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500 flex-shrink-0" />
                   <div>
-                    <h3 className="font-semibold text-gray-900">You're on the Starter Plan</h3>
-                    <p className="text-sm text-gray-600">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">You're on the Starter Plan</h3>
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Unlock unlimited transactions, AI insights, and advanced features
                     </p>
                   </div>
                 </div>
-                <Button 
-                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+                <MobileButton
+                  variant="primary"
+                  size={isMobile ? "sm" : "md"}
                   onClick={() => navigate('/subscription')}
+                  className="w-full sm:w-auto"
                 >
                   <Crown className="w-4 h-4 mr-2" />
                   Upgrade to Pro
-                </Button>
+                </MobileButton>
               </div>
             </CardContent>
           </Card>
@@ -110,7 +111,7 @@ const Dashboard = () => {
         <QuickActionsPanel onRefresh={handleRefresh} />
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <FixedIncomeExpenseChart data={chartData.monthlyData} />
           <FixedCategoryChart data={chartData.categoryData} />
         </div>
@@ -122,13 +123,13 @@ const Dashboard = () => {
         {subscription?.plan === 'starter' && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
                 <Zap className="w-5 h-5 text-yellow-500" />
                 <span>Plan Usage</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Transactions this month</span>
@@ -136,7 +137,7 @@ const Dashboard = () => {
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
-                      className="bg-blue-600 h-2 rounded-full" 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
                       style={{ width: `${Math.min(((data?.totalTransactions || 0) / 50) * 100, 100)}%` }}
                     ></div>
                   </div>
@@ -155,13 +156,14 @@ const Dashboard = () => {
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                   <p className="text-sm text-yellow-800">
                     You're approaching your monthly transaction limit. 
-                    <Button 
-                      variant="link" 
+                    <MobileButton 
+                      variant="ghost" 
+                      size="sm"
                       className="p-0 h-auto text-yellow-800 underline ml-1"
                       onClick={() => navigate('/subscription')}
                     >
                       Upgrade to Pro
-                    </Button> 
+                    </MobileButton> 
                     for unlimited transactions.
                   </p>
                 </div>
@@ -170,7 +172,7 @@ const Dashboard = () => {
           </Card>
         )}
       </div>
-    </DashboardLayout>
+    </MobileOptimizedLayout>
   );
 };
 
