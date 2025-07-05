@@ -6,21 +6,25 @@ import { FixedIncomeExpenseChart } from "@/components/dashboard/FixedIncomeExpen
 import { FixedCategoryChart } from "@/components/dashboard/FixedCategoryChart";
 import { RecentTransactionsPanel } from "@/components/dashboard/RecentTransactionsPanel";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
+import { AIChatAssistant } from "@/components/AIChatAssistant";
 import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { useSubscription } from "@/hooks/useSubscription";
 import { ChartDataService } from "@/services/chartDataService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MobileButton } from "@/components/mobile/MobileFormComponents";
-import { Crown, Zap } from "lucide-react";
+import { Crown, Zap, Plus, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TransactionModal } from "@/components/TransactionModal";
 
 const Dashboard = () => {
   const { data, isLoading, refreshData } = useRealTimeData();
   const { subscription, limits, upgradeRequired } = useSubscription();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
 
   // Calculate metrics for the enhanced cards
   const metrics = useMemo(() => {
@@ -33,28 +37,64 @@ const Dashboard = () => {
     return ChartDataService.prepareChartData(data || {});
   }, [data]);
 
-  const handleQuickAction = (action: string) => {
-    console.log('Quick action triggered:', action);
-    
-    switch (action) {
-      case 'add-expense':
-      case 'add-income':
-        navigate('/transactions');
-        break;
-      case 'create-invoice':
-        navigate('/invoices');
-        break;
-      case 'ai-assistant':
-        console.log('Opening AI assistant...');
-        break;
-      default:
-        console.log('Unknown action:', action);
-    }
+  const handleQuickAdd = () => {
+    setShowTransactionModal(true);
+  };
+
+  const handleAIAssistant = () => {
+    setShowAIAssistant(true);
   };
 
   const handleRefresh = () => {
     refreshData();
   };
+
+  const handleTransactionSaved = () => {
+    setShowTransactionModal(false);
+    handleRefresh();
+  };
+
+  // Mobile header actions
+  const mobileHeaderActions = (
+    <div className="flex items-center gap-2">
+      <MobileButton 
+        onClick={handleAIAssistant}
+        variant="outline"
+        size="sm"
+        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+      >
+        <MessageSquare className="w-4 h-4" />
+      </MobileButton>
+      <MobileButton 
+        onClick={handleQuickAdd}
+        variant="primary"
+        size="sm"
+      >
+        <Plus className="w-4 h-4" />
+      </MobileButton>
+    </div>
+  );
+
+  // Desktop header actions
+  const desktopHeaderActions = (
+    <div className="flex items-center space-x-3">
+      <MobileButton 
+        variant="outline" 
+        className="border-blue-300 text-blue-600 hover:bg-blue-50"
+        onClick={handleAIAssistant}
+      >
+        <MessageSquare className="w-4 h-4 mr-2" />
+        Flow AI
+      </MobileButton>
+      <MobileButton 
+        onClick={handleQuickAdd}
+        variant="primary"
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Quick Add
+      </MobileButton>
+    </div>
+  );
 
   const content = (
     <div className="space-y-4 sm:space-y-6">
@@ -153,6 +193,22 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Modals */}
+      {showTransactionModal && (
+        <TransactionModal
+          isOpen={showTransactionModal}
+          onClose={() => setShowTransactionModal(false)}
+          onTransactionAdded={handleTransactionSaved}
+        />
+      )}
+
+      {showAIAssistant && (
+        <AIChatAssistant
+          isOpen={showAIAssistant}
+          onClose={() => setShowAIAssistant(false)}
+        />
+      )}
     </div>
   );
 
@@ -173,7 +229,11 @@ const Dashboard = () => {
 
     if (isMobile) {
       return (
-        <MobileOptimizedLayout title="Dashboard" activeTab="dashboard">
+        <MobileOptimizedLayout 
+          title="Dashboard" 
+          activeTab="dashboard"
+          headerActions={mobileHeaderActions}
+        >
           {loadingContent}
         </MobileOptimizedLayout>
       );
@@ -182,6 +242,13 @@ const Dashboard = () => {
     return (
       <DashboardLayout activeTab="dashboard">
         <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
+            </div>
+            {desktopHeaderActions}
+          </div>
           {loadingContent}
         </div>
       </DashboardLayout>
@@ -191,7 +258,11 @@ const Dashboard = () => {
   // Use mobile layout for mobile devices, desktop layout for desktop
   if (isMobile) {
     return (
-      <MobileOptimizedLayout title="Dashboard" activeTab="dashboard">
+      <MobileOptimizedLayout 
+        title="Dashboard" 
+        activeTab="dashboard"
+        headerActions={mobileHeaderActions}
+      >
         {content}
       </MobileOptimizedLayout>
     );
@@ -201,6 +272,13 @@ const Dashboard = () => {
   return (
     <DashboardLayout activeTab="dashboard">
       <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
+          </div>
+          {desktopHeaderActions}
+        </div>
         {content}
       </div>
     </DashboardLayout>
