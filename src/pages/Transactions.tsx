@@ -1,4 +1,3 @@
-
 import { MobileOptimizedLayout } from "@/components/mobile/MobileOptimizedLayout";
 import { TransactionManager } from "@/components/TransactionManager";
 import { TransactionList } from "@/components/TransactionList";
@@ -10,6 +9,7 @@ import { useState } from "react";
 import { TransactionModal } from "@/components/TransactionModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const Transactions = () => {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
