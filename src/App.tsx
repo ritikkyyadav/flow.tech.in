@@ -1,3 +1,4 @@
+
 import {
   QueryClient,
   QueryClientProvider,
@@ -21,7 +22,7 @@ import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Notifications from "@/pages/Notifications";
 import NotFound from "@/pages/NotFound";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AIChatProvider } from "@/hooks/useAIChat";
 
 const queryClient = new QueryClient();
