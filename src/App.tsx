@@ -1,4 +1,5 @@
 
+
 import {
   QueryClient,
   QueryClientProvider,
@@ -6,6 +7,7 @@ import {
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/hooks/useAuth";
+import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { TransactionProvider } from "@/contexts/TransactionContext";
 import { BudgetProvider } from "@/contexts/BudgetContext";
 import { AIProvider } from "@/contexts/AIContext";
@@ -33,73 +35,75 @@ function App() {
       <BrowserRouter>
         <Toaster />
         <AuthProvider>
-          <TransactionProvider>
-            <BudgetProvider>
-              <AIProvider>
-                <AIChatProvider>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/dashboard" element={
-                      <ProtectedRoute>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/transactions" element={
-                      <ProtectedRoute>
-                        <Transactions />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/budget" element={
-                      <ProtectedRoute>
-                        <Budget />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/invoices" element={
-                      <ProtectedRoute>
-                        <Invoices />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/reports" element={
-                      <ProtectedRoute>
-                        <Reports />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/data-management" element={
-                      <ProtectedRoute>
-                        <DataManagement />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/indian-features" element={
-                      <ProtectedRoute>
-                        <IndianFeatures />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/subscription" element={
-                      <ProtectedRoute>
-                        <Subscription />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/profile" element={
-                      <ProtectedRoute>
-                        <Profile />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/settings" element={
-                      <ProtectedRoute>
-                        <Settings />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/notifications" element={
-                      <ProtectedRoute>
-                        <Notifications />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </AIChatProvider>
-              </AIProvider>
-            </BudgetProvider>
-          </TransactionProvider>
+          <SubscriptionProvider>
+            <TransactionProvider>
+              <BudgetProvider>
+                <AIProvider>
+                  <AIChatProvider>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/dashboard" element={
+                        <ProtectedRoute>
+                          <Dashboard />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/transactions" element={
+                        <ProtectedRoute>
+                          <Transactions />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/budget" element={
+                        <ProtectedRoute>
+                          <Budget />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/invoices" element={
+                        <ProtectedRoute>
+                          <Invoices />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/reports" element={
+                        <ProtectedRoute>
+                          <Reports />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/data-management" element={
+                        <ProtectedRoute>
+                          <DataManagement />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/indian-features" element={
+                        <ProtectedRoute>
+                          <IndianFeatures />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/subscription" element={
+                        <ProtectedRoute>
+                          <Subscription />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/settings" element={
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/notifications" element={
+                        <ProtectedRoute>
+                          <Notifications />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </AIChatProvider>
+                </AIProvider>
+              </BudgetProvider>
+            </TransactionProvider>
+          </SubscriptionProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
