@@ -26,6 +26,7 @@ import Notifications from "@/pages/Notifications";
 import NotFound from "@/pages/NotFound";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AIChatProvider } from "@/hooks/useAIChat";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ErrorBoundary>
         <Toaster />
         <AuthProvider>
           <SubscriptionProvider>
@@ -105,6 +107,7 @@ function App() {
             </TransactionProvider>
           </SubscriptionProvider>
         </AuthProvider>
+        </ErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>
   );
