@@ -166,8 +166,28 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
 export const useSubscription = (): SubscriptionContextType => {
   const context = useContext(SubscriptionContext);
-  if (!context) {
-    throw new Error('useSubscription must be used within a SubscriptionProvider');
-  }
-  return context;
+  if (context) return context;
+
+  console.warn('useSubscription used outside SubscriptionProvider: falling back to starter defaults');
+  const limits = getSubscriptionLimits('starter');
+  return {
+    subscription: null,
+    limits,
+    isLoading: false,
+    checkLimit: (feature) => Boolean(limits[feature]),
+    getRemainingTransactions: () => 0,
+    getRemainingInvoices: () => 0,
+    upgradeRequired: (feature: string) => {
+      const featureRequirements: Record<string, boolean> = {
+        'ai_insights': !limits.hasAIFeatures,
+        'advanced_charts': !limits.hasAdvancedCharts,
+        'inventory': !limits.hasInventoryManagement,
+        'custom_branding': !limits.hasCustomBranding,
+        'api_access': !limits.hasAPIAccess,
+        'unlimited_transactions': limits.maxTransactions !== -1,
+        'unlimited_invoices': limits.maxInvoices !== -1
+      };
+      return featureRequirements[feature] ?? false;
+    }
+  };
 };
