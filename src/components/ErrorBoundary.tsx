@@ -35,7 +35,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
             <button onClick={this.handleReload} className="px-4 py-2 rounded-md bg-primary text-primary-foreground">
               Reload
             </button>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'development' && this.state.error && (
               <pre className="text-left text-xs mt-4 overflow-auto max-h-60 p-3 bg-muted rounded">
                 {this.state.error?.message}
               </pre>

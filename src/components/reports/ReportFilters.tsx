@@ -135,15 +135,7 @@ export const ReportFilters = ({
               {isGenerating ? 'Generating...' : 'Export Excel'}
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onPrint}
-              className="flex items-center gap-2"
-            >
-              <Printer className="w-4 h-4" />
-              Print
-            </Button>
+            {/* Print action available elsewhere - removed duplicate */}
           </div>
         </div>
       </CardContent>
