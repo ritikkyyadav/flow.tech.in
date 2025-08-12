@@ -218,29 +218,6 @@ const Dashboard = () => {
     return (
       <DashboardLayout activeTab="dashboard">
         <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <MobileButton 
-                variant="outline" 
-                className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                onClick={handleAIAssistant}
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Flow AI
-              </MobileButton>
-              <MobileButton 
-                onClick={handleQuickAdd}
-                variant="primary"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Quick Add
-              </MobileButton>
-            </div>
-          </div>
           {loadingContent}
         </div>
       </DashboardLayout>
@@ -282,29 +259,6 @@ const Dashboard = () => {
   return (
     <DashboardLayout activeTab="dashboard">
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <MobileButton 
-              variant="outline" 
-              className="border-blue-300 text-blue-600 hover:bg-blue-50"
-              onClick={handleAIAssistant}
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Flow AI
-            </MobileButton>
-            <MobileButton 
-              onClick={handleQuickAdd}
-              variant="primary"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Quick Add
-            </MobileButton>
-          </div>
-        </div>
         {content}
       </div>
     </DashboardLayout>
