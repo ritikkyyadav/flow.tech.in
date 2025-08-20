@@ -1,0 +1,75 @@
+Attached HTML and CSS Context
+
+<html lang="en"><head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Flow - AI-Powered Finance</title>
+    <meta name="description" content="AI-powered personal finance management app with smart categorization and insights">
+    <meta name="author" content="Flow">
+
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Flow">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="msapplication-TileColor" content="#2563eb">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/lovable-uploads/f270ce25-b700-4c54-b8a9-489a6d7cf9d3.png">
+    <link rel="icon" type="image/png" href="/lovable-uploads/f270ce25-b700-4c54-b8a9-489a6d7cf9d3.png">
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/lovable-uploads/f270ce25-b700-4c54-b8a9-489a6d7cf9d3.png" as="image">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Flow - AI-Powered Finance">
+    <meta property="og:description" content="Smart personal finance management with AI-powered insights">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/lovable-uploads/f270ce25-b700-4c54-b8a9-489a6d7cf9d3.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Flow - AI-Powered Finance">
+    <meta name="twitter:description" content="Smart personal finance management with AI-powered insights">
+    <meta name="twitter:image" content="/lovable-uploads/f270ce25-b700-4c54-b8a9-489a6d7cf9d3.png">
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx?t=1754935761300"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(() => console.log('SW registered'))
+            .catch(() => console.log('SW registration failed'));
+        });
+      }
+    </script>
+  
+
+</body></html>
+
+
+/* Matched Rule from user-agent */
+html {
+  display: block;
+}
+
+/* Matched Rule from user-agent */
+:root {
+  view-transition-name: root;
+}

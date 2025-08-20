@@ -8,6 +8,7 @@ import { Calendar, Download, Edit, Eye, Filter, Search, Send, Trash2 } from "luc
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import InvoicePreviewModal from "@/components/invoices/InvoicePreviewModal";
 
 interface Invoice {
   id: string;
@@ -54,6 +55,8 @@ export const InvoiceList = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewInvoiceId, setPreviewInvoiceId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -414,7 +417,7 @@ export const InvoiceList = () => {
                       </td>
                       <td className="py-4">
                         <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" title="Preview" onClick={() => { setPreviewInvoiceId(invoice.id); setPreviewOpen(true); }}>
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="sm">
@@ -441,6 +444,11 @@ export const InvoiceList = () => {
           )}
         </CardContent>
       </Card>
+      <InvoicePreviewModal
+        open={previewOpen}
+        onOpenChange={(o) => { if (!o) { setPreviewOpen(false); setPreviewInvoiceId(null); } else { setPreviewOpen(true); } }}
+        invoiceId={previewInvoiceId}
+      />
     </div>
   );
 };

@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { triggerDataRefresh } from '@/hooks/useRealTimeData';
 import { Calendar, DollarSign, FileText, Tag } from 'lucide-react';
 import { toast } from 'sonner';
@@ -28,6 +30,14 @@ interface TransactionModalProps {
   transaction?: Transaction | null;
   mode?: 'add' | 'edit';
   editTransaction?: Transaction | null;
+  // Optional: prefill values when opening in 'add' mode (e.g., OCR results)
+  initialData?: Partial<{
+    amount: number | string;
+    type: 'income' | 'expense';
+    category: string;
+    description: string;
+    transaction_date: string; // yyyy-mm-dd
+  }> | null;
 }
 
 const categories = {
@@ -48,9 +58,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   onTransactionAdded,
   transaction,
   mode = 'add',
-  editTransaction
+  editTransaction,
+  initialData
 }) => {
   const { getRemainingTransactions, subscription } = useSubscription();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     amount: '',
     type: 'expense' as 'income' | 'expense',
@@ -73,15 +85,16 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         transaction_date: transactionToEdit.transaction_date
       });
     } else {
+      // Initialize from initialData if provided (OCR prefill), else defaults
       setFormData({
-        amount: '',
-        type: 'expense',
-        category: '',
-        description: '',
-        transaction_date: new Date().toISOString().split('T')[0]
+        amount: initialData?.amount ? String(initialData.amount) : '',
+        type: initialData?.type ?? 'expense',
+        category: initialData?.category ?? '',
+        description: initialData?.description ?? '',
+        transaction_date: initialData?.transaction_date ?? new Date().toISOString().split('T')[0]
       });
     }
-  }, [transactionToEdit, mode, isOpen]);
+  }, [transactionToEdit, mode, isOpen, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,40 +121,70 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         return;
       }
 
-      // Get existing transactions
-      const existingTransactions = JSON.parse(localStorage.getItem('withu_transactions') || '[]');
-
-      if (mode === 'edit' && transactionToEdit) {
-        // Update existing transaction
-        const updatedTransactions = existingTransactions.map((t: Transaction) =>
-          t.id === transactionToEdit.id
-            ? {
-                ...t,
+      if (user?.id) {
+        // Use Supabase as source of truth when authenticated
+        if (mode === 'edit' && transactionToEdit) {
+          const { error } = await supabase
+            .from('transactions')
+            .update({
+              amount,
+              type: formData.type,
+              category: formData.category,
+              description: formData.description,
+              transaction_date: new Date(formData.transaction_date).toISOString(),
+            })
+            .eq('id', transactionToEdit.id)
+            .eq('user_id', user.id);
+          if (error) throw error;
+          toast.success('Transaction updated successfully');
+        } else {
+          const { error } = await supabase
+            .from('transactions')
+            .insert([
+              {
+                user_id: user.id,
                 amount,
                 type: formData.type,
                 category: formData.category,
                 description: formData.description,
-                transaction_date: formData.transaction_date
+                transaction_date: new Date(formData.transaction_date).toISOString(),
               }
-            : t
-        );
-        localStorage.setItem('withu_transactions', JSON.stringify(updatedTransactions));
-        toast.success('Transaction updated successfully');
+            ]);
+          if (error) throw error;
+          toast.success('Transaction added successfully');
+        }
       } else {
-        // Add new transaction
-        const newTransaction: Transaction = {
-          id: Date.now().toString(),
-          amount,
-          type: formData.type,
-          category: formData.category,
-          description: formData.description,
-          transaction_date: formData.transaction_date,
-          user_id: 'current_user'
-        };
-
-        const updatedTransactions = [...existingTransactions, newTransaction];
-        localStorage.setItem('withu_transactions', JSON.stringify(updatedTransactions));
-        toast.success('Transaction added successfully');
+        // Fallback to localStorage for unauthenticated demo mode
+        const existingTransactions = JSON.parse(localStorage.getItem('withu_transactions') || '[]');
+        if (mode === 'edit' && transactionToEdit) {
+          const updatedTransactions = existingTransactions.map((t: Transaction) =>
+            t.id === transactionToEdit.id
+              ? {
+                  ...t,
+                  amount,
+                  type: formData.type,
+                  category: formData.category,
+                  description: formData.description,
+                  transaction_date: formData.transaction_date
+                }
+              : t
+          );
+          localStorage.setItem('withu_transactions', JSON.stringify(updatedTransactions));
+          toast.success('Transaction updated successfully');
+        } else {
+          const newTransaction: Transaction = {
+            id: Date.now().toString(),
+            amount,
+            type: formData.type,
+            category: formData.category,
+            description: formData.description,
+            transaction_date: formData.transaction_date,
+            user_id: 'current_user'
+          };
+          const updatedTransactions = [...existingTransactions, newTransaction];
+          localStorage.setItem('withu_transactions', JSON.stringify(updatedTransactions));
+          toast.success('Transaction added successfully');
+        }
       }
 
       // Trigger real-time data refresh

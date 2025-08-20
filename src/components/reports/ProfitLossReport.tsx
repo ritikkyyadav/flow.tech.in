@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { formatIndianCurrency } from "@/utils/indianUtils";
 import type { Transaction } from "@/contexts/TransactionContext";
+import { sanitizeNumericValue } from "@/utils/chartDataUtils";
 
 interface ProfitLossReportProps {
   transactions: Transaction[];
@@ -18,10 +19,12 @@ export const ProfitLossReport = ({ transactions, dateRange, loading }: ProfitLos
     const expensesByCategory: { [key: string]: number } = {};
 
     transactions.forEach(transaction => {
+      // Skip invalid dates or records
+      if (isNaN(new Date(transaction.transaction_date).getTime())) return;
       if (transaction.type === 'income') {
-        incomeByCategory[transaction.category] = (incomeByCategory[transaction.category] || 0) + transaction.amount;
+        incomeByCategory[transaction.category] = (incomeByCategory[transaction.category] || 0) + sanitizeNumericValue(transaction.amount);
       } else {
-        expensesByCategory[transaction.category] = (expensesByCategory[transaction.category] || 0) + transaction.amount;
+        expensesByCategory[transaction.category] = (expensesByCategory[transaction.category] || 0) + sanitizeNumericValue(transaction.amount);
       }
     });
 

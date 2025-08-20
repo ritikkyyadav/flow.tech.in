@@ -1,0 +1,43 @@
+/* High quality print styles */
+@media print {
+  /* Use A4 and reasonable margins */
+  @page {
+    size: A4;
+    margin: 16mm;
+  }
+
+  html, body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
+  /* Remove app chrome */
+  #root > header,
+  #root nav,
+  #root footer,
+  .print-hidden,
+  [data-no-print='true'] {
+    display: none !important;
+  }
+
+  /* Expand invoice preview to full width for printing */
+  .print-container,
+  .invoice-print-surface {
+    width: 100% !important;
+    max-width: 100% !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Typography tweaks for sharpness */
+  .invoice-print-surface h1,
+  .invoice-print-surface h2,
+  .invoice-print-surface h3 {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

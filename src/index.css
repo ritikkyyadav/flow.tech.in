@@ -268,6 +268,29 @@
   .mobile-shadow-lg {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
+
+  /* Glassmorphism helpers */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+  .glass-dark {
+    background: rgba(17, 24, 39, 0.6);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Page enter animation */
+  .mobile-fade-in {
+    animation: mobile-fade-in 280ms ease-out;
+  }
+  @keyframes mobile-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   
   /* Flow gradient utilities */
   .flow-gradient {
@@ -370,6 +393,42 @@
 
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
+  }
+
+  /* Landing page animations */
+  .animated-gradient-bg {
+    background: radial-gradient(circle at 20% 30%, rgba(37,99,235,0.25) 0%, transparent 55%),
+                radial-gradient(circle at 80% 60%, rgba(249,115,22,0.25) 0%, transparent 55%),
+                linear-gradient(115deg, #0d1117 10%, #111827 55%, #0f0f17 90%);
+    animation: gradient-move 14s ease-in-out infinite alternate;
+  }
+  @keyframes gradient-move {
+    0% { filter: hue-rotate(0deg) brightness(1); }
+    50% { filter: hue-rotate(20deg) brightness(1.05); }
+    100% { filter: hue-rotate(-10deg) brightness(1); }
+  }
+
+  .animated-gradient-text {
+    background: linear-gradient(90deg,#60a5fa 0%,#93c5fd 30%,#fb923c 70%,#60a5fa 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+  background-clip: text;
+    color: transparent;
+    animation: gradient-shift 6s linear infinite;
+  }
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .animate-shine {
+    animation: shine-move 2.75s linear infinite;
+  }
+  @keyframes shine-move {
+    0% { transform: translateX(-100%); }
+    60% { transform: translateX(120%); }
+    100% { transform: translateX(120%); }
   }
 }
 

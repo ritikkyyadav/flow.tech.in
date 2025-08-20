@@ -176,6 +176,60 @@ export class ChartDataService {
       .slice(-6); // Last 6 months
   }
 
+  // New: flexible series builder for 1D/1W/1M/6M/12M/1Y/custom day ranges
+  static buildTimeSeries(
+    transactions: Transaction[],
+    range: '1d' | '7d' | '1m' | '6m' | '12m' | '1y' | 'custom',
+    customDays = 30
+  ): IncomeExpenseData[] {
+    const valid = validateTransactions(transactions);
+    const endDate = new Date();
+    const startDate = new Date();
+    if (range === '1d') startDate.setDate(endDate.getDate() - 1);
+    else if (range === '7d') startDate.setDate(endDate.getDate() - 7);
+    else if (range === '1m') startDate.setMonth(endDate.getMonth() - 1);
+    else if (range === '6m') startDate.setMonth(endDate.getMonth() - 6);
+    else if (range === '12m' || range === '1y') startDate.setMonth(endDate.getMonth() - 12);
+    else if (range === 'custom') startDate.setDate(endDate.getDate() - Math.max(1, Math.min(365, customDays)));
+
+    const dayDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / 86400000);
+    const groupMode: 'day' | 'week' | 'month' = dayDiff <= 31 ? 'day' : (dayDiff <= 180 ? 'week' : 'month');
+
+    const grouped = new Map<string, { date: Date; income: number; expenses: number; label: string }>();
+
+    valid.forEach(t => {
+      const d = new Date(t.transaction_date);
+      if (isNaN(d.getTime()) || d < startDate || d > endDate) return;
+
+      let key = '';
+      let label = '';
+      if (groupMode === 'day') {
+        key = d.toISOString().slice(0, 10);
+        label = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+      } else if (groupMode === 'week') {
+        const temp = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+        const dayNum = (temp.getUTCDay() + 6) % 7;
+        temp.setUTCDate(temp.getUTCDate() - dayNum + 3);
+        const firstThursday = new Date(Date.UTC(temp.getUTCFullYear(), 0, 4));
+        const week = 1 + Math.round(((temp.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+        key = `${temp.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+        label = `W${String(week).padStart(2, '0')} ${String(temp.getUTCFullYear()).slice(2)}`;
+      } else {
+        key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        label = d.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
+      }
+
+      if (!grouped.has(key)) grouped.set(key, { date: d, income: 0, expenses: 0, label });
+      const g = grouped.get(key)!;
+      const amt = sanitizeNumericValue(t.amount);
+      if (t.type === 'income') g.income += amt; else g.expenses += amt;
+    });
+
+    return Array.from(grouped.entries())
+      .sort((a, b) => a[1].date.getTime() - b[1].date.getTime())
+      .map(([, v]) => ({ month: v.label, income: v.income, expenses: v.expenses, net: v.income - v.expenses }));
+  }
+
   static formatIndianCurrency(amount: number): string {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',

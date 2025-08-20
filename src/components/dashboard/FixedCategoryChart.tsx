@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CategoryData, ChartDataService } from '@/services/chartDataService';
 import { PieChart as PieChartIcon } from 'lucide-react';
 
@@ -16,18 +16,21 @@ export const FixedCategoryChart: React.FC<FixedCategoryChartProps> = ({
   loading = false, 
   className = "" 
 }) => {
+  const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
+  const total = React.useMemo(() => data.reduce((sum, d) => sum + (d.value || 0), 0), [data]);
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload;
+      const p = payload[0];
+      const percent = total ? ((p.value as number) / total) * 100 : 0;
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">{data.name}</p>
-          <p className="text-sm text-gray-600">
-            Amount: {ChartDataService.formatIndianCurrency(data.value)}
-          </p>
-          <p className="text-sm text-gray-600">
-            Percentage: {data.percentage.toFixed(1)}%
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: p.color }} />
+            <p className="font-medium text-gray-900">{p.name}</p>
+          </div>
+          <p className="text-sm text-gray-700 mt-1">{ChartDataService.formatIndianCurrency(p.value as number)}</p>
+          <p className="text-xs text-gray-500">{percent.toFixed(1)}% of total</p>
         </div>
       );
     }
@@ -120,14 +123,20 @@ export const FixedCategoryChart: React.FC<FixedCategoryChartProps> = ({
                   data={data}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={CustomLabel}
-                  outerRadius={100}
-                  fill="#8884d8"
+                  innerRadius={70}
+                  outerRadius={110}
+                  paddingAngle={2}
                   dataKey="value"
+                  nameKey="name"
+                  onMouseEnter={(_, idx) => setActiveIndex(idx)}
                 >
                   {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.color}
+                      stroke={index === activeIndex ? '#111827' : '#fff'}
+                      strokeWidth={index === activeIndex ? 2 : 1}
+                    />
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
@@ -138,7 +147,12 @@ export const FixedCategoryChart: React.FC<FixedCategoryChartProps> = ({
           <div className="w-full lg:w-1/2 mt-4 lg:mt-0 lg:pl-6">
             <div className="space-y-3">
               {data.map((category, index) => (
-                <div key={index} className="flex items-center justify-between">
+                <button
+                  type="button"
+                  key={index}
+                  className={`flex items-center justify-between w-full px-2 py-2 rounded-md border ${index === activeIndex ? 'bg-gray-50 border-gray-300' : 'bg-white border-gray-200'}`}
+                  onMouseEnter={() => setActiveIndex(index)}
+                >
                   <div className="flex items-center space-x-3">
                     <div 
                       className="w-4 h-4 rounded-full" 
@@ -156,7 +170,7 @@ export const FixedCategoryChart: React.FC<FixedCategoryChartProps> = ({
                       {category.percentage.toFixed(1)}%
                     </p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>

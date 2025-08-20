@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis
 import { PieChart as PieChartIcon, BarChart3 } from "lucide-react";
 import { formatIndianCurrency } from "@/utils/indianUtils";
 import type { Transaction } from "@/contexts/TransactionContext";
+import { sanitizeNumericValue } from "@/utils/chartDataUtils";
 
 interface SpendingCategoriesReportProps {
   transactions: Transaction[];
@@ -18,7 +19,8 @@ export const SpendingCategoriesReport = ({ transactions, dateRange, loading }: S
     transactions
       .filter(t => t.type === 'expense')
       .forEach(transaction => {
-        expensesByCategory[transaction.category] = (expensesByCategory[transaction.category] || 0) + transaction.amount;
+        if (isNaN(new Date(transaction.transaction_date).getTime())) return;
+        expensesByCategory[transaction.category] = (expensesByCategory[transaction.category] || 0) + sanitizeNumericValue(transaction.amount);
       });
 
     const totalExpenses = Object.values(expensesByCategory).reduce((sum, amount) => sum + amount, 0);

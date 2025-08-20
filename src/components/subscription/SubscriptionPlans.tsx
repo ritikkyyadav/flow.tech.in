@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,9 +26,9 @@ interface SubscriptionPlan {
 const plans: SubscriptionPlan[] = [
   {
     id: 'starter',
-    name: 'Starter',
+    name: 'Free',
     price: 0,
-    period: 'Forever Free',
+    period: 'per month',
     description: 'Perfect for getting started with financial management',
     features: [
       { name: 'Up to 50 transactions per month', included: true },
@@ -40,7 +40,6 @@ const plans: SubscriptionPlan[] = [
       { name: '3 months data history', included: true },
       { name: 'Watermarked reports', included: true },
       { name: 'Advanced AI insights', included: false },
-      { name: 'Unlimited transactions', included: false },
       { name: 'Inventory management', included: false },
       { name: 'Custom branding', included: false },
       { name: 'Multi-user access', included: false },
@@ -78,11 +77,22 @@ export const SubscriptionPlans: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<string>('starter');
   const [isUpgrading, setIsUpgrading] = useState(false);
 
+  // Load current plan from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('withu_subscription');
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (data?.plan) setSelectedPlan(data.plan);
+      }
+    } catch {}
+  }, []);
+
   const handlePlanSelect = async (planId: string) => {
     setIsUpgrading(true);
     
     try {
-      if (planId === 'pro') {
+  if (planId === 'pro') {
         // In a real implementation, this would integrate with payment gateway
         console.log('Initiating Pro plan upgrade for user:', user?.id);
         
@@ -91,7 +101,7 @@ export const SubscriptionPlans: React.FC = () => {
         
         // Update user subscription status
         localStorage.setItem('withu_subscription', JSON.stringify({
-          plan: 'pro',
+          plan: planId,
           status: 'active',
           startDate: new Date().toISOString(),
           nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -114,57 +124,53 @@ export const SubscriptionPlans: React.FC = () => {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
+  const formatPrice = (price: number) => new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+
+  const gridCols = useMemo(() => 'grid-cols-1 md:grid-cols-2', []);
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Choose Your Plan
-        </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Select the perfect plan for your business needs. Upgrade or downgrade at any time.
-        </p>
+    <div className="max-w-5xl mx-auto p-6">
+      <div className="text-center mb-10">
+        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Upgrade your plan</h1>
+        <div className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 mb-6">
+          <span className="px-2 py-0.5 rounded-full bg-white shadow border mr-2">Personal</span>
+          <span className="px-2">Business</span>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+  <div className={`grid ${gridCols} gap-6 justify-center`}> 
         {plans.map((plan) => (
           <Card 
             key={plan.id} 
-            className={`relative ${plan.popular ? 'border-2 border-blue-500 shadow-lg' : 'border border-gray-200'}`}
+            className={`relative ${
+              plan.popular
+                ? 'ring-1 ring-indigo-500/60 shadow-lg border border-indigo-200 bg-indigo-50'
+                : 'border border-gray-200'
+            }`}
           >
             {plan.popular && (
-              <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-4 py-1">
-                <Star className="w-4 h-4 mr-1" />
-                Most Popular
-              </Badge>
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-3 py-0.5 z-10 rounded-full shadow">Most Popular</Badge>
             )}
             
             <CardHeader className="text-center pb-6">
               <div className="flex justify-center mb-4">
                 {plan.id === 'starter' ? (
-                  <Zap className="w-12 h-12 text-green-500" />
+                  <Zap className="w-12 h-12 text-gray-500" />
                 ) : (
                   <Crown className="w-12 h-12 text-yellow-500" />
                 )}
               </div>
               
-              <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+              <CardTitle className="text-2xl font-semibold">{plan.name}</CardTitle>
               
               <div className="mt-4">
-                <span className="text-4xl font-bold">
-                  {plan.price === 0 ? 'Free' : formatPrice(plan.price)}
-                </span>
-                {plan.price > 0 && (
-                  <span className="text-gray-500 ml-2">{plan.period}</span>
-                )}
+                <span className="text-4xl font-bold">{plan.price === 0 ? '₹0' : formatPrice(plan.price)}</span>
+                <span className="text-gray-500 ml-2 text-sm align-middle">{plan.period}</span>
               </div>
               
               <p className="text-gray-600 mt-2">{plan.description}</p>
@@ -188,36 +194,26 @@ export const SubscriptionPlans: React.FC = () => {
 
               <Button
                 className={`w-full ${
-                  plan.popular 
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                  plan.id === 'pro'
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
                 }`}
                 onClick={() => handlePlanSelect(plan.id)}
                 disabled={isUpgrading}
               >
                 {isUpgrading ? 'Processing...' : 
-                 plan.id === selectedPlan ? 'Current Plan' : 
-                 plan.price === 0 ? 'Get Started Free' : 'Upgrade to Pro'}
+                 plan.id === selectedPlan ? 'Your current plan' : 
+                 plan.id === 'starter' ? 'Get Free' : 'Upgrade to Pro'}
               </Button>
-
               {plan.id === 'pro' && (
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  14-day free trial • Cancel anytime
-                </p>
+                <p className="text-xs text-gray-500 text-center mt-2">14-day free trial • Cancel anytime</p>
               )}
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="mt-12 text-center">
-        <p className="text-gray-600 mb-4">
-          Need a custom plan for your enterprise? 
-        </p>
-        <Button variant="outline">
-          Contact Sales
-        </Button>
-      </div>
+      <div className="mt-12 text-center text-sm text-gray-500">Have an existing plan? <a className="underline" href="#">See billing help</a></div>
     </div>
   );
 };

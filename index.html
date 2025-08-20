@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Flow - AI-Powered Finance</title>
+    <link rel="stylesheet" href="/src/index.print.css" media="print" />
     <meta name="description" content="AI-powered personal finance management app with smart categorization and insights" />
     <meta name="author" content="Flow" />
 
@@ -43,14 +44,26 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Service Worker Registration -->
-    <script>
+    <!-- Service Worker Registration (only in production) -->
+    <script type="module">
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(() => console.log('SW registered'))
-            .catch(() => console.log('SW registration failed'));
-        });
+        if (import.meta.env.PROD) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(() => console.log('[SW] registered'))
+              .catch((e) => console.log('[SW] registration failed', e));
+          });
+        } else {
+          // In dev, ensure no SW interferes with Vite's module loading
+          navigator.serviceWorker.getRegistrations?.().then((regs) => {
+            regs.forEach((r) => r.unregister());
+          });
+          // Clear any caches created by previous SW versions
+          if (window.caches?.keys) {
+            caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+          }
+          console.log('[SW] disabled in development and existing registrations cleared');
+        }
       }
     </script>
   </body>

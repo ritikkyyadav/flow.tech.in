@@ -14,6 +14,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { TransactionModal } from "@/components/TransactionModal";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface RecentTransactionsPanelProps {
   transactions: any[];
@@ -24,6 +28,8 @@ export const RecentTransactionsPanel = ({ transactions, onRefresh }: RecentTrans
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
+  const [editing, setEditing] = useState<any | null>(null);
+  const { user } = useAuth();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -89,6 +95,7 @@ export const RecentTransactionsPanel = ({ transactions, onRefresh }: RecentTrans
   };
 
   return (
+    <>
     <Card className="bg-white border border-gray-200">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -200,10 +207,27 @@ export const RecentTransactionsPanel = ({ transactions, onRefresh }: RecentTrans
                       
                       {/* Quick Actions */}
                       <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); setEditing(transaction); }}>
                           <Edit className="w-3 h-3" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            if (user?.id) {
+                              const { error } = await supabase.from('transactions').delete().eq('id', transaction.id).eq('user_id', user.id);
+                              if (error) throw error;
+                            } else {
+                              const existing = JSON.parse(localStorage.getItem('withu_transactions') || '[]');
+                              const updated = existing.filter((t: any) => t.id !== transaction.id);
+                              localStorage.setItem('withu_transactions', JSON.stringify(updated));
+                            }
+                            toast.success('Transaction deleted');
+                            onRefresh();
+                          } catch (err) {
+                            console.error(err);
+                            toast.error('Delete failed');
+                          }
+                        }}>
                           <Trash2 className="w-3 h-3" />
                         </Button>
                         <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
@@ -247,5 +271,15 @@ export const RecentTransactionsPanel = ({ transactions, onRefresh }: RecentTrans
         )}
       </CardContent>
     </Card>
+    {editing && (
+      <TransactionModal
+        isOpen={!!editing}
+        onClose={() => setEditing(null)}
+        onTransactionAdded={() => { setEditing(null); onRefresh(); }}
+        editTransaction={editing}
+        mode="edit"
+      />
+    )}
+    </>
   );
 };

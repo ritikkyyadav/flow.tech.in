@@ -1,10 +1,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Send, Paperclip, Mic, Image, FileText, Video, X, Menu, Settings, Search, MoreVertical, MessageSquare, Bot, Plus, TrendingUp, DollarSign, Calculator, FileSpreadsheet, Clock, ChevronRight } from "lucide-react";
+import { Send, Paperclip, Mic, Image, FileText, Video, X, Menu, Search, Bot, Plus, TrendingUp, DollarSign, Calculator, FileSpreadsheet } from "lucide-react";
 import { useAI } from "@/contexts/AIContext";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ChatService, ChatConversation } from "@/services/chatService";
 
 interface Message {
   id: string;
@@ -39,75 +40,126 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
   const [showUploadMenu, setShowUploadMenu] = useState(false);
   const [showSidebar, setShowSidebar] = useState(!isMobile);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeChat, setActiveChat] = useState(1);
+  const [activeChat, setActiveChat] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [persistenceEnabled, setPersistenceEnabled] = useState<boolean>(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Keep view pinned to the last message as the context grows
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: 'end' });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Load chat history when component mounts
+  // Ensure bottom-most message is visible when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const t = setTimeout(scrollToBottom, 50);
+      return () => clearTimeout(t);
+    }
+  }, [isOpen]);
+
+  // Load chat history from Supabase on open
   useEffect(() => {
     if (isOpen && user) {
-      loadChatHistory();
+      bootstrapConversations();
     }
   }, [isOpen, user]);
 
-  // Save chat history to localStorage
-  const saveChatHistory = (newMessages: Message[]) => {
-    if (user) {
-      const chatKey = `flow-ai-chat-${user.id}`;
-      localStorage.setItem(chatKey, JSON.stringify(newMessages));
-    }
-  };
-
-  // Load chat history from localStorage
-  const loadChatHistory = () => {
-    if (user) {
-      const chatKey = `flow-ai-chat-${user.id}`;
-      const savedHistory = localStorage.getItem(chatKey);
-      if (savedHistory) {
+  // Bootstrap conversations and load latest
+  const bootstrapConversations = async () => {
+    if (!user) return;
+    try {
+      const convs = await ChatService.listConversations(user.id);
+      setConversations(convs);
+      let convo = convs[0];
+      if (!convo) {
+        convo = await ChatService.getOrCreateConversation(user.id, 'AI Assistant');
+        setConversations([convo]);
+      }
+      setActiveChat(convo.id);
+      const history = await ChatService.getMessages(convo.id);
+      const mapped = history.map(m => ({ id: m.id, type: m.role as any, content: m.content, timestamp: new Date(m.created_at) }));
+      if (mapped.length === 0) {
+        setMessages([{
+          id: 'welcome', type: 'ai', content: "Hello! I'm your Flow AI assistant. I can help you with financial insights, transaction analysis, budget planning, and more. How can I assist you today?", timestamp: new Date()
+        }]);
+      } else {
+        setMessages(mapped);
+      }
+      setPersistenceEnabled(true);
+    } catch (err: any) {
+      // Likely tables not created yet or network issue; fall back to localStorage
+      console.warn('Chat persistence disabled, falling back to local storage:', err?.message || err);
+      setPersistenceEnabled(false);
+      const ls = localStorage.getItem(`flow-ai-chat-${user.id}`);
+      if (ls) {
         try {
-          const parsedHistory = JSON.parse(savedHistory);
-          // Ensure timestamps are Date objects
-          const messagesWithDates = parsedHistory.map((msg: any) => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp)
-          }));
-          setMessages(messagesWithDates);
-        } catch (error) {
-          console.error('Error loading chat history:', error);
-        }
+          const parsed = JSON.parse(ls);
+          setMessages(parsed.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })));
+        } catch {}
       }
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+  const handleSendMessage = async (preset?: string) => {
+    const outgoing = (preset ?? inputMessage).trim();
+    if (!outgoing || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: inputMessage,
+  content: outgoing,
       timestamp: new Date()
     };
 
     setMessages(prev => {
-      const newMessages = [...prev, userMessage];
-      saveChatHistory(newMessages);
-      return newMessages;
+      const n = [...prev, userMessage];
+      if (!persistenceEnabled && user) {
+        localStorage.setItem(`flow-ai-chat-${user.id}`, JSON.stringify(n));
+      }
+      return n;
     });
-    setInputMessage('');
+    if (persistenceEnabled) {
+      try {
+        if (user) {
+          // Ensure we have a conversation to attach to
+          let conversationId = activeChat;
+          if (!conversationId) {
+            const convo = await ChatService.getOrCreateConversation(user.id, 'AI Assistant');
+            conversationId = convo.id;
+            setActiveChat(conversationId);
+            setConversations(prev => {
+              const exists = prev.find(c => c.id === conversationId);
+              return exists ? prev : [convo, ...prev];
+            });
+          }
+          if (conversationId) {
+            await ChatService.addMessage({ conversationId, userId: user.id, role: 'user', content: userMessage.content });
+          }
+        }
+      } catch (e) {
+        console.error('Failed saving user message', e);
+      }
+    }
+    // Update conversation preview optimistically with user's message
+    if (activeChat) {
+      setConversations(prev => prev.map(c => c.id === activeChat ? {
+        ...c,
+        last_message: userMessage.content,
+        last_message_at: new Date().toISOString()
+      } : c));
+    }
+  setInputMessage('');
     setIsLoading(true);
 
     try {
       if (isFeatureEnabled('chatAssistant')) {
         const aiResponse = await makeAIRequest({
-          prompt: `You are Flow AI, a financial assistant. The user asks: "${inputMessage}". Provide helpful financial advice and insights. Keep responses concise and actionable.`,
+          prompt: `You are Flow AI, a financial assistant. The user asks: "${outgoing}". Provide helpful financial advice and insights. Keep responses concise and actionable.`,
           provider: 'google',
           model: 'gemini-pro',
           tokens: 0,
@@ -121,12 +173,24 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
           timestamp: new Date()
         };
         setMessages(prev => {
-          const newMessages = [...prev, aiMessage];
-          saveChatHistory(newMessages);
-          return newMessages;
+          const n = [...prev, aiMessage];
+          if (!persistenceEnabled && user) {
+            localStorage.setItem(`flow-ai-chat-${user.id}`, JSON.stringify(n));
+          }
+          return n;
         });
+        if (persistenceEnabled && user && activeChat) {
+          await ChatService.addMessage({ conversationId: activeChat, userId: user.id, role: 'ai', content: aiMessage.content });
+        }
+        if (activeChat) {
+          setConversations(prev => prev.map(c => c.id === activeChat ? {
+            ...c,
+            last_message: aiMessage.content,
+            last_message_at: new Date().toISOString()
+          } : c));
+        }
       } else {
-        const fallbackResponse = generateFallbackResponse(inputMessage);
+  const fallbackResponse = generateFallbackResponse(outgoing);
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           type: 'ai',
@@ -134,10 +198,22 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
           timestamp: new Date()
         };
         setMessages(prev => {
-          const newMessages = [...prev, aiMessage];
-          saveChatHistory(newMessages);
-          return newMessages;
+          const n = [...prev, aiMessage];
+          if (!persistenceEnabled && user) {
+            localStorage.setItem(`flow-ai-chat-${user.id}`, JSON.stringify(n));
+          }
+          return n;
         });
+        if (persistenceEnabled && user && activeChat) {
+          await ChatService.addMessage({ conversationId: activeChat, userId: user.id, role: 'ai', content: aiMessage.content });
+        }
+        if (activeChat) {
+          setConversations(prev => prev.map(c => c.id === activeChat ? {
+            ...c,
+            last_message: aiMessage.content,
+            last_message_at: new Date().toISOString()
+          } : c));
+        }
       }
     } catch (error) {
       console.error('Error getting AI response:', error);
@@ -147,13 +223,9 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
         content: 'I apologize, but I encountered an issue processing your request. Please try again or contact support if the problem persists.',
         timestamp: new Date()
       };
-      setMessages(prev => {
-        const newMessages = [...prev, errorMessage];
-        saveChatHistory(newMessages);
-        return newMessages;
-      });
+  setMessages(prev => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+  setIsLoading(false);
     }
   };
 
@@ -253,7 +325,7 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
     "Calculate my savings rate"
   ];
 
-  const clearChatHistory = () => {
+  const clearChatHistory = async () => {
     const initialMessage = {
       id: '1',
       type: 'ai' as const,
@@ -261,17 +333,24 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
       timestamp: new Date()
     };
     setMessages([initialMessage]);
+    // create a new conversation or reset local
     if (user) {
-      const chatKey = `flow-ai-chat-${user.id}`;
-      localStorage.removeItem(chatKey);
+      if (persistenceEnabled) {
+        const convo = await ChatService.createConversation(user.id, 'New chat');
+        setActiveChat(convo.id);
+        const convs = await ChatService.listConversations(user.id);
+        setConversations(convs);
+      } else {
+        localStorage.setItem(`flow-ai-chat-${user.id}`, JSON.stringify([initialMessage]));
+      }
     }
   };
 
   if (isMobile) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-full h-screen max-h-screen w-full m-0 p-0 rounded-none">
-          <div className="flex flex-col h-full bg-gray-50">
+  <DialogContent className="sm:max-w-full h-screen max-h-screen w-full m-0 p-0 rounded-none" hideClose>
+          <div className="flex flex-col h-full bg-gray-50 min-h-0">
             {/* Mobile Header */}
             <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -283,11 +362,12 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                   <p className="text-xs text-gray-500">AI-Powered Financial Insights</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-sm hover:from-blue-700 hover:to-purple-700"
               >
-                <X className="w-5 h-5 text-gray-600" />
+                <X className="w-4 h-4 mr-1" />
+                Dismiss
               </button>
             </div>
 
@@ -309,7 +389,7 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
             </div>
 
             {/* Messages Area - Mobile */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
               {messages.length === 1 && (
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Suggested Questions</h4>
@@ -317,7 +397,7 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                     {suggestedQueries.map((query, index) => (
                       <button
                         key={index}
-                        onClick={() => setInputMessage(query)}
+                        onClick={() => handleSendMessage(query)}
                         className="text-left p-3 bg-white hover:bg-gray-50 rounded-lg transition-colors text-sm text-gray-700 w-full border border-gray-200"
                       >
                         {query}
@@ -326,12 +406,20 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                   </div>
                 </div>
               )}
-
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+              {messages.map((message, idx) => {
+                const prev = messages[idx - 1];
+                const showDate = !prev || formatDate(prev.timestamp) !== formatDate(message.timestamp);
+                return (
+                <>
+                  {showDate && (
+                    <div className="w-full flex justify-center my-1" key={`date-${message.id}`}>
+                      <span className="text-[10px] text-gray-500 px-2 py-0.5 bg-gray-100 rounded-full">{formatDate(message.timestamp)}</span>
+                    </div>
+                  )}
+                  <div
+                    key={message.id}
+                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
                   <div className={`flex items-start space-x-2 max-w-[85%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                     {message.type === 'ai' && (
                       <div className="w-7 h-7 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -351,8 +439,9 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                       </p>
                     </div>
                   </div>
-                </div>
-              ))}
+                  </div>
+                </>
+              );})}
               
               {isLoading && (
                 <div className="flex justify-start">
@@ -426,7 +515,7 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                 </div>
 
                 <button
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage()}
                   disabled={isLoading}
                   className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg disabled:opacity-50"
                 >
@@ -452,8 +541,8 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
   // Desktop version
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-6xl h-[80vh] p-0">
-        <div className="flex h-full bg-gray-50">
+  <DialogContent className="sm:max-w-6xl h-[80vh] p-0" hideClose>
+        <div className="flex h-full bg-gray-50 min-h-0">
           {/* Sidebar */}
           <div className={`${showSidebar ? 'w-80' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 overflow-hidden flex flex-col`}>
             <div className="p-4 border-b border-gray-200">
@@ -480,33 +569,40 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
               </div>
             </div>
             
-            {/* Chat List */}
+            {/* Chat List from DB or fallback */}
             <div className="flex-1 overflow-y-auto">
-              {chatHistory.map(chat => (
-                <div
-                  key={chat.id}
-                  onClick={() => setActiveChat(chat.id)}
-                  className={`p-4 border-b border-gray-100 cursor-pointer transition-all hover:bg-gray-50 ${
-                    chat.active ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''
+              {persistenceEnabled && conversations
+                .filter(conv => !searchQuery || (conv.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || (conv.last_message || '').toLowerCase().includes(searchQuery.toLowerCase()))
+                .map(conv => (
+                <button
+                  key={conv.id}
+                  onClick={async () => {
+                    setActiveChat(conv.id);
+                    const history = await ChatService.getMessages(conv.id);
+                    setMessages(history.map(m => ({ id: m.id, type: m.role as any, content: m.content, timestamp: new Date(m.created_at) })));
+                  }}
+                  className={`w-full text-left p-4 border-b border-gray-100 transition-all hover:bg-gray-50 ${
+                    conv.id === activeChat ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between mb-1">
-                    <h4 className="font-medium text-gray-900 text-sm">{chat.title}</h4>
-                    <span className="text-xs text-gray-500">{chat.time}</span>
+                    <h4 className="font-medium text-gray-900 text-sm">{conv.title || 'Untitled chat'}</h4>
+                    <span className="text-xs text-gray-500">{conv.last_message_at ? new Date(conv.last_message_at).toLocaleDateString() : ''}</span>
                   </div>
-                  <p className="text-sm text-gray-600 truncate">{chat.lastMessage}</p>
-                  {chat.unread > 0 && (
-                    <span className="inline-flex items-center justify-center mt-1 px-2 py-0.5 text-xs font-medium text-white bg-blue-600 rounded-full">
-                      {chat.unread}
-                    </span>
-                  )}
-                </div>
+                  <p className="text-sm text-gray-600 truncate">{conv.last_message || 'No messages yet'}</p>
+                </button>
               ))}
+              {!persistenceEnabled && (
+                <div className="p-4 text-sm text-gray-600">
+                  <p className="font-medium mb-1">Local Chat</p>
+                  <p>Your messages are stored locally on this device.</p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Main Chat Area */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             {/* Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-4">
               <div className="flex items-center justify-between">
@@ -532,17 +628,13 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <Settings className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <button 
-                    onClick={onClose}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
+                <button
+                  onClick={onClose}
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-sm hover:from-blue-700 hover:to-purple-700"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Dismiss
+                </button>
               </div>
             </div>
 
@@ -565,7 +657,7 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 min-h-0">
               {messages.length === 1 && (
                 <div className="mb-8">
                   <h4 className="text-sm font-medium text-gray-700 mb-3">Suggested Questions</h4>
@@ -573,7 +665,7 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                     {suggestedQueries.map((query, index) => (
                       <button
                         key={index}
-                        onClick={() => setInputMessage(query)}
+                        onClick={() => handleSendMessage(query)}
                         className="text-left p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm text-gray-700"
                       >
                         {query}
@@ -582,12 +674,20 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                   </div>
                 </div>
               )}
-
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+              {messages.map((message, idx) => {
+                const prev = messages[idx - 1];
+                const showDate = !prev || formatDate(prev.timestamp) !== formatDate(message.timestamp);
+                return (
+                <>
+                  {showDate && (
+                    <div className="w-full flex justify-center my-1" key={`date-d-${message.id}`}>
+                      <span className="text-xs text-gray-500 px-2 py-0.5 bg-gray-100 rounded-full">{formatDate(message.timestamp)}</span>
+                    </div>
+                  )}
+                  <div
+                    key={message.id}
+                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
                   <div className={`flex items-start space-x-3 max-w-2xl ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                     {message.type === 'ai' && (
                       <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -607,8 +707,9 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                       </p>
                     </div>
                   </div>
-                </div>
-              ))}
+                  </div>
+                </>
+              );})}
               
               {isLoading && (
                 <div className="flex justify-start">
@@ -690,7 +791,7 @@ export const AIChatAssistant = ({ isOpen, onClose }: AIChatAssistantProps) => {
                 </div>
 
                 <button
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage()}
                   disabled={isLoading}
                   className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg disabled:opacity-50"
                 >

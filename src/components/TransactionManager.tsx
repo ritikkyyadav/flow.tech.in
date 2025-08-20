@@ -136,6 +136,8 @@ export const TransactionManager = ({ onRefresh }: TransactionManagerProps) => {
           isOpen={showTransactionModal}
           onClose={() => setShowTransactionModal(false)}
           onTransactionAdded={handleTransactionSaved}
+          // Ensure the modal opens with the correct type pre-selected
+          initialData={{ type: transactionType }}
         />
       )}
     </>

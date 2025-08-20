@@ -2,7 +2,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 
 interface SubscriptionData {
-  plan: 'starter' | 'pro';
+  plan: 'starter' | 'plus' | 'pro';
   status: 'active' | 'inactive' | 'trial' | 'expired';
   startDate?: string;
   nextBilling?: string;
@@ -47,6 +47,19 @@ const getSubscriptionLimits = (plan: string): SubscriptionLimits => {
       dataHistoryMonths: -1 // Unlimited
     };
   }
+  if (plan === 'plus') {
+    return {
+      maxTransactions: 500,
+      maxInvoices: 50,
+      hasAdvancedCharts: true,
+      hasAIFeatures: true,
+      hasInventoryManagement: false,
+      hasCustomBranding: false,
+      hasAPIAccess: false,
+      maxUsers: 3,
+      dataHistoryMonths: 12
+    };
+  }
   
   // Starter plan limits
   return {
@@ -74,7 +87,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Load subscription data from localStorage
     const loadSubscription = () => {
       try {
-        const stored = localStorage.getItem('withu_subscription');
+  const stored = localStorage.getItem('withu_subscription');
         if (stored) {
           const data = JSON.parse(stored);
           setSubscription(data);

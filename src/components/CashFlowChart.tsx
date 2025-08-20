@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// Replaced Select with preset buttons + custom slider
+import { Slider } from '@/components/ui/slider';
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { Calendar, Download, TrendingUp, TrendingDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,8 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Type definitions
 interface ChartData {
-  month: string;
-  monthName: string;
+  key: string; // grouping key (YYYY-MM-DD | YYYY-Www | YYYY-MM)
+  label: string; // X-axis label
   income: number;
   expense: number;
   netSavings: number;
@@ -101,8 +102,9 @@ export const CashFlowChart: React.FC = () => {
   const [data, setData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState('6months');
-  const [viewMode, setViewMode] = useState('monthly');
+  // timeRange: 1d, 7d, 1m, 6m, 12m, 1y, custom
+  const [timeRange, setTimeRange] = useState<'1d' | '7d' | '1m' | '6m' | '12m' | '1y' | 'custom'>('6m');
+  const [customDays, setCustomDays] = useState<number>(30);
 
   // Custom tooltip component
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -148,23 +150,19 @@ export const CashFlowChart: React.FC = () => {
     setError(null);
 
     try {
-      // Calculate date range based on selection
-      const endDate = new Date();
-      const startDate = new Date();
-      
-      switch (timeRange) {
-        case '6months':
-          startDate.setMonth(endDate.getMonth() - 6);
-          break;
-        case '12months':
-          startDate.setMonth(endDate.getMonth() - 12);
-          break;
-        case '24months':
-          startDate.setMonth(endDate.getMonth() - 24);
-          break;
-        default:
-          startDate.setMonth(endDate.getMonth() - 6);
-      }
+  // Calculate date range based on selection
+  const endDate = new Date();
+  const startDate = new Date();
+  if (timeRange === '1d') startDate.setDate(endDate.getDate() - 1);
+  else if (timeRange === '7d') startDate.setDate(endDate.getDate() - 7);
+  else if (timeRange === '1m') startDate.setMonth(endDate.getMonth() - 1);
+  else if (timeRange === '6m') startDate.setMonth(endDate.getMonth() - 6);
+  else if (timeRange === '12m' || timeRange === '1y') startDate.setMonth(endDate.getMonth() - 12);
+  else if (timeRange === 'custom') startDate.setDate(endDate.getDate() - Math.max(1, Math.min(365, customDays)));
+
+  const dayDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  // Decide grouping granularity
+  const groupMode: 'day' | 'week' | 'month' = dayDiff <= 31 ? 'day' : (dayDiff <= 180 ? 'week' : 'month');
 
       const { data: transactions, error: fetchError } = await supabase
         .from('transactions')
@@ -187,8 +185,8 @@ export const CashFlowChart: React.FC = () => {
         return;
       }
 
-      // Group transactions by month
-      const monthlyData = validTransactions.reduce((acc: any, transaction: Transaction) => {
+      // Group transactions by selected granularity
+      const grouped: Record<string, { date: Date; income: number; expense: number; label: string }> = validTransactions.reduce((acc, transaction: Transaction) => {
         try {
           const date = new Date(transaction.transaction_date);
           if (isNaN(date.getTime())) {
@@ -196,51 +194,49 @@ export const CashFlowChart: React.FC = () => {
             return acc;
           }
 
-          const month = date.toISOString().slice(0, 7); // YYYY-MM format
-          
-          if (!acc[month]) {
-            acc[month] = { month, income: 0, expense: 0 };
-          }
-          
+          let key = '';
+          let label = '';
           const amount = sanitizeNumericValue(transaction.amount);
-          
-          if (transaction.type === 'income') {
-            acc[month].income += amount;
-          } else if (transaction.type === 'expense') {
-            acc[month].expense += amount;
+
+          if (groupMode === 'day') {
+            key = date.toISOString().slice(0, 10); // YYYY-MM-DD
+            label = date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+          } else if (groupMode === 'week') {
+            // ISO week number
+            const tmp = new Date(date);
+            const dayNum = (tmp.getUTCDay() + 6) % 7; // 0=Mon
+            tmp.setUTCDate(tmp.getUTCDate() - dayNum + 3);
+            const firstThursday = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 4));
+            const week = 1 + Math.round(((tmp.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+            key = `${tmp.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+            label = `W${String(week).padStart(2, '0')} ${String(tmp.getUTCFullYear()).slice(2)}`;
+          } else {
+            key = date.toISOString().slice(0, 7); // YYYY-MM
+            label = date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
           }
-          
+
+          if (!acc[key]) {
+            acc[key] = { date, income: 0, expense: 0, label };
+          }
+          if (transaction.type === 'income') acc[key].income += amount;
+          else if (transaction.type === 'expense') acc[key].expense += amount;
           return acc;
         } catch (error) {
           console.warn('Error processing transaction:', transaction, error);
           return acc;
         }
-      }, {});
+      }, {} as Record<string, { date: Date; income: number; expense: number; label: string }>);
 
       // Convert to array and calculate cumulative balance
       let cumulativeBalance = 0;
-      const chartData: ChartData[] = Object.values(monthlyData)
-        .sort((a: any, b: any) => a.month.localeCompare(b.month))
-        .map((item: any) => {
+      const chartData: ChartData[] = Object.entries(grouped)
+        .sort(([, a], [, b]) => a.date.getTime() - b.date.getTime())
+        .map(([key, item]) => {
           const income = sanitizeNumericValue(item.income);
           const expense = sanitizeNumericValue(item.expense);
           const netSavings = income - expense;
           cumulativeBalance += netSavings;
-          
-          const monthDate = new Date(item.month + '-01');
-          const monthName = monthDate.toLocaleDateString('en-IN', { 
-            month: 'short', 
-            year: '2-digit' 
-          });
-
-          return {
-            month: item.month,
-            monthName,
-            income,
-            expense,
-            netSavings,
-            cumulativeBalance
-          };
+          return { key, label: item.label, income, expense, netSavings, cumulativeBalance };
         });
 
       // Validate final data
@@ -271,7 +267,7 @@ export const CashFlowChart: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [user, timeRange]); // Dependencies for re-fetching
+  }, [user, timeRange, customDays]); // Dependencies for re-fetching
 
   // Format currency function
   const formatCurrency = (value: number): string => {
@@ -289,7 +285,7 @@ export const CashFlowChart: React.FC = () => {
       const csvContent = [
         'Month,Income,Expense,Net Savings,Cumulative Balance',
         ...data.map(item => 
-          `${item.monthName},${item.income},${item.expense},${item.netSavings},${item.cumulativeBalance}`
+          `${item.label},${item.income},${item.expense},${item.netSavings},${item.cumulativeBalance}`
         )
       ].join('\n');
 
@@ -410,25 +406,56 @@ export const CashFlowChart: React.FC = () => {
           <div className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
               <Calendar className="w-5 h-5" />
-              <span>Cash Flow Analysis</span>
+              <span>Income vs Expenses Trend</span>
             </CardTitle>
             <div className="flex items-center space-x-2">
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="6months">6 Months</SelectItem>
-                  <SelectItem value="12months">12 Months</SelectItem>
-                  <SelectItem value="24months">24 Months</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Preset range buttons */}
+              <div className="hidden md:flex items-center gap-1">
+                {[
+                  { id: '1d', label: '1D' },
+                  { id: '7d', label: '1W' },
+                  { id: '1m', label: '1M' },
+                  { id: '6m', label: '6M' },
+                  { id: '12m', label: '12M' },
+                  { id: '1y', label: '1Y' },
+                  { id: 'custom', label: 'Custom' },
+                ].map(p => (
+                  <Button
+                    key={p.id}
+                    size="sm"
+                    variant={timeRange === (p.id as any) ? 'default' : 'outline'}
+                    onClick={() => setTimeRange(p.id as any)}
+                  >
+                    {p.label}
+                  </Button>
+                ))}
+              </div>
               <Button variant="outline" size="sm" onClick={exportChart}>
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
             </div>
           </div>
+
+          {/* Custom slider visible when custom selected */}
+          {timeRange === 'custom' && (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Range</span>
+                <span className="font-medium">{customDays} day{customDays > 1 ? 's' : ''}</span>
+              </div>
+              <div className="px-1">
+                <Slider
+                  value={[customDays]}
+                  min={1}
+                  max={365}
+                  step={1}
+                  onValueChange={(v) => setCustomDays(v[0])}
+                />
+              </div>
+              <div className="text-xs text-muted-foreground">Drag to adjust 1–365 days</div>
+            </div>
+          )}
 
           {/* Summary Statistics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -460,11 +487,11 @@ export const CashFlowChart: React.FC = () => {
         </CardHeader>
 
         <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={400}>
             <ComposedChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis 
-                dataKey="monthName" 
+        dataKey="label" 
                 stroke="#6B7280"
                 tick={{ fontSize: 12 }}
               />

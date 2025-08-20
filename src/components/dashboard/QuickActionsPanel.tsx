@@ -16,12 +16,15 @@ import {
   PieChart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { TransactionModal } from "@/components/TransactionModal";
 import { VoiceEntryModal } from "@/components/VoiceEntryModal";
 import { CameraCapture } from "@/components/mobile/CameraCapture";
 import { toast } from "sonner";
+import { recognizeReceipt } from "@/lib/ocr";
+import { useTransactions } from "@/contexts/TransactionContext";
+import { groupTransactionsByCategory, sanitizeNumericValue } from "@/utils/chartDataUtils";
 
 interface QuickActionsPanelProps {
   onRefresh: () => void;
@@ -31,6 +34,13 @@ interface QuickActionsPanelProps {
 export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelProps) => {
   const navigate = useNavigate();
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [prefillData, setPrefillData] = useState<{
+    amount?: number | string;
+    type?: 'income' | 'expense';
+    category?: string;
+    description?: string;
+    transaction_date?: string;
+  } | null>(null);
   const [showVoiceEntryModal, setShowVoiceEntryModal] = useState(false);
   const [showCameraCapture, setShowCameraCapture] = useState(false);
 
@@ -97,17 +107,77 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
     }
   ];
 
+  // Transactions for dynamic insights
+  const { transactions } = useTransactions();
+
+  // Derive current and previous month expense totals
+  const { spendingTrendDisplay, topCategoryDisplay } = useMemo(() => {
+    if (!transactions || transactions.length === 0) {
+      return { spendingTrendDisplay: '—', topCategoryDisplay: '—' };
+    }
+
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
+    const prevMonth = prevMonthDate.getMonth();
+    const prevYear = prevMonthDate.getFullYear();
+
+    const isSameMonth = (d: Date, m: number, y: number) => d.getMonth() === m && d.getFullYear() === y;
+
+    let currentTotal = 0;
+    let prevTotal = 0;
+    const currentMonthExpenses: typeof transactions = [];
+
+    for (const t of transactions) {
+      if (t.type !== 'expense') continue;
+      const d = new Date(t.transaction_date);
+      if (isNaN(d.getTime())) continue;
+      if (isSameMonth(d, currentMonth, currentYear)) {
+        const amt = sanitizeNumericValue(t.amount);
+        currentTotal += amt;
+        currentMonthExpenses.push(t);
+      } else if (isSameMonth(d, prevMonth, prevYear)) {
+        prevTotal += sanitizeNumericValue(t.amount);
+      }
+    }
+
+    let spendingTrendDisplay: string;
+    if (prevTotal > 0) {
+      const change = ((currentTotal - prevTotal) / prevTotal) * 100;
+      const rounded = Math.round(change);
+      spendingTrendDisplay = `${change > 0 ? '+' : ''}${rounded}%`;
+    } else if (currentTotal > 0) {
+      spendingTrendDisplay = 'New';
+    } else {
+      spendingTrendDisplay = '0%';
+    }
+
+    // Top category for current month
+    // Ensure each transaction has user_id before passing to groupTransactionsByCategory
+    const categoryData = groupTransactionsByCategory(
+      currentMonthExpenses.map(t => ({
+        ...t,
+        user_id: (t as any).user_id ?? "",
+      })),
+      'expense'
+    );
+    const topCategoryDisplay = categoryData.length > 0 ? categoryData[0].name : '—';
+
+    return { spendingTrendDisplay, topCategoryDisplay };
+  }, [transactions]);
+
   const insights = [
     {
       label: 'Spending Trend',
-      value: '+12%',
+      value: spendingTrendDisplay,
       icon: TrendingUp,
-      color: 'text-red-600',
-      bg: 'bg-red-50'
+      color: spendingTrendDisplay.startsWith('+') ? 'text-red-600' : 'text-emerald-600',
+      bg: spendingTrendDisplay.startsWith('+') ? 'bg-red-50' : 'bg-emerald-50'
     },
     {
       label: 'Top Category',
-      value: 'Food & Dining',
+      value: topCategoryDisplay,
       icon: PieChart,
       color: 'text-blue-600',
       bg: 'bg-blue-50'
@@ -120,6 +190,8 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
     try {
       switch (actionId) {
         case 'add-transaction':
+          // Default to expense if no OCR prefill has specified a type
+          setPrefillData((prev) => ({ ...(prev ?? {}), type: prev?.type ?? 'expense' }));
           setShowTransactionModal(true);
           break;
         case 'generate-report':
@@ -171,18 +243,33 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
     toast.success('Voice entry completed');
   };
 
-  const handleReceiptCapture = (imageData: string) => {
-    console.log('Receipt captured:', imageData);
-    // Here you would typically process the image with OCR
-    // For now, we'll just show a success message
-    toast.success('Receipt captured! Processing with AI...');
-    
-    // Simulate processing time
-    setTimeout(() => {
-      toast.success('Receipt processed successfully! Transaction details extracted.');
-      // You could open the transaction modal with pre-filled data here
+  const handleReceiptCapture = async (imageData: string) => {
+    try {
+      const t = toast.loading('Analyzing receipt with AI…');
+      const res = await recognizeReceipt(imageData);
+      toast.dismiss(t);
+
+      if (res.engine === 'none') {
+        toast.warning('OCR not available in this browser. You can still enter details manually.');
+      } else {
+        toast.success(`Receipt processed (${res.engine}). Review and save.`);
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      setPrefillData({
+        amount: res.fields.amount ?? '',
+        type: res.fields.type ?? 'expense',
+        category: res.fields.category ?? '',
+        description: res.fields.description ?? '',
+        transaction_date: res.fields.date ?? today,
+      });
       setShowTransactionModal(true);
-    }, 2000);
+    } catch (err) {
+      console.error('OCR error:', err);
+      toast.error('Failed to analyze receipt. You can fill details manually.');
+      setPrefillData(null);
+      setShowTransactionModal(true);
+    }
   };
 
   return (
@@ -328,11 +415,12 @@ export const QuickActionsPanel = ({ onRefresh, className }: QuickActionsPanelPro
       </Card>
 
       {/* Transaction Modal */}
-      {showTransactionModal && (
+  {showTransactionModal && (
         <TransactionModal
           isOpen={showTransactionModal}
           onClose={() => setShowTransactionModal(false)}
           onTransactionAdded={handleTransactionAdded}
+      initialData={prefillData ?? undefined}
         />
       )}
 

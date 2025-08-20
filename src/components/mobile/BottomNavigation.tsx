@@ -1,5 +1,5 @@
 
-import { Home, Plus, FileText, BarChart3, User, Database } from "lucide-react";
+import { Home, Plus, FileText, BarChart3, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
@@ -57,8 +57,10 @@ export const BottomNavigation = ({ activeTab = 'dashboard', onTabChange }: Botto
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden safe-area-bottom">
-      <div className="grid grid-cols-5 h-16">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden safe-area-bottom">
+      {/* Glass background */}
+      <div className="absolute inset-0 backdrop-blur-md bg-white/80 border-t border-white/60" />
+      <div className="relative grid grid-cols-5 h-16">
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -89,6 +91,19 @@ export const BottomNavigation = ({ activeTab = 'dashboard', onTabChange }: Botto
             </button>
           );
         })}
+        {/* Floating Action Button */}
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2">
+          <button
+            onClick={() => handleTabClick('transactions', '/transactions')}
+            aria-label="Quick Add"
+            className={cn(
+              'w-14 h-14 rounded-full shadow-xl transition-transform duration-150 active:scale-95',
+              'bg-gradient-to-r from-blue-600 to-orange-500 text-white flex items-center justify-center'
+            )}
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        </div>
       </div>
     </nav>
   );

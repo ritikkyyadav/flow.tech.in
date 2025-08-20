@@ -6,7 +6,7 @@ import { TransactionList } from "@/components/TransactionList";
 import { SmartCategorizer } from "@/components/ai/SmartCategorizer";
 import { CategoryLearning } from "@/components/ai/CategoryLearning";
 import { MobileButton } from "@/components/mobile/MobileFormComponents";
-import { AIChatAssistant } from "@/components/AIChatAssistant";
+import PremiumAIChat from "@/components/PremiumAIChat";
 import { Plus, MessageSquare, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { TransactionModal } from "@/components/TransactionModal";
@@ -16,11 +16,13 @@ import { cn } from "@/lib/utils";
 
 const Transactions = () => {
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [defaultTxType, setDefaultTxType] = useState<'income' | 'expense'>('expense');
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const isMobile = useIsMobile();
 
-  const handleQuickAdd = () => {
+  const handleQuickAdd = (type: 'income' | 'expense' = 'expense') => {
+    setDefaultTxType(type);
     setShowTransactionModal(true);
   };
 
@@ -141,11 +143,12 @@ const Transactions = () => {
           isOpen={showTransactionModal}
           onClose={() => setShowTransactionModal(false)}
           onTransactionAdded={handleTransactionSaved}
+          initialData={{ type: defaultTxType }}
         />
       )}
 
       {showAIAssistant && (
-        <AIChatAssistant
+        <PremiumAIChat
           isOpen={showAIAssistant}
           onClose={() => setShowAIAssistant(false)}
         />
@@ -193,23 +196,7 @@ const Transactions = () => {
             <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
             <p className="text-gray-600">Manage your income and expenses</p>
           </div>
-          <div className="flex items-center space-x-3">
-            <MobileButton 
-              variant="outline" 
-              className="border-blue-300 text-blue-600 hover:bg-blue-50"
-              onClick={handleAIAssistant}
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Flow AI
-            </MobileButton>
-            <MobileButton 
-              onClick={handleQuickAdd}
-              variant="primary"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Quick Add
-            </MobileButton>
-          </div>
+          {/* Page-level quick actions removed to avoid duplication with the global header */}
         </div>
         {content}
       </div>

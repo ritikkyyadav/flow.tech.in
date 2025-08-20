@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AIChatAssistant } from "@/components/AIChatAssistant";
+import { AIChatAssistant } from "@/components/AIChatAssistant"; // legacy (kept for fallback or other areas)
+import PremiumAIChat from "@/components/PremiumAIChat";
 import { useAIChat } from "@/hooks/useAIChat";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -49,7 +50,8 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
     { id: "dashboard", icon: Home, label: "Dashboard", color: "from-blue-500 to-blue-600" },
     { id: "transactions", icon: TrendingUp, label: "Transactions", color: "from-emerald-500 to-green-600" },
     { id: "budget", icon: Target, label: "Budget", color: "from-purple-500 to-purple-600" },
-    { id: "invoices", icon: FileText, label: "Invoices", color: "from-orange-500 to-orange-600" },
+  { id: "invoices", icon: FileText, label: "Invoices", color: "from-orange-500 to-orange-600" },
+  { id: "accounting", icon: FileText, label: "Accounting", color: "from-slate-500 to-slate-600" },
     { id: "reports", icon: BarChart3, label: "Reports", color: "from-pink-500 to-pink-600" },
     { id: "data", icon: Database, label: "Data Management", color: "from-indigo-500 to-indigo-600" },
     { id: "indian", icon: Flag, label: "Indian Features", color: "from-red-500 to-red-600" },
@@ -91,6 +93,9 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         break;
       case 'invoices':
         navigate('/invoices');
+        break;
+      case 'accounting':
+        navigate('/accounting');
         break;
       case 'reports':
         navigate('/reports');
@@ -415,13 +420,10 @@ export const DashboardLayout = ({ children, activeTab = "dashboard", onTabChange
         </div>
       </div>
 
-      {/* AI Chat Assistant Modal */}
+      {/* Premium AI Chat Modal (replaces legacy AIChatAssistant) */}
       <AnimatePresence>
         {showAIAssistant && (
-          <AIChatAssistant 
-            isOpen={showAIAssistant} 
-            onClose={closeChat} 
-          />
+          <PremiumAIChat isOpen={showAIAssistant} onClose={closeChat} />
         )}
       </AnimatePresence>
 

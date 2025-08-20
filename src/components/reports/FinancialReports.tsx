@@ -8,6 +8,7 @@ import { SpendingCategoriesReport } from "./SpendingCategoriesReport";
 import { ReportFilters } from "./ReportFilters";
 import { IncomeExpenseChart } from "../dashboard/IncomeExpenseChart";
 import { formatIndianCurrency } from "@/utils/indianUtils";
+import { sanitizeNumericValue } from "@/utils/chartDataUtils";
 
 export const FinancialReports = () => {
   const { transactions, loading } = useTransactions();
@@ -17,13 +18,35 @@ export const FinancialReports = () => {
   });
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Helper: parse flexible date formats (yyyy-mm-dd, dd-mm-yyyy, dd/mm/yyyy, ISO)
+  const parseDate = (input: string): Date => {
+    if (!input) return new Date('1970-01-01');
+    // Already ISO or yyyy-mm-dd
+    if (/^\d{4}-\d{2}-\d{2}/.test(input)) return new Date(input);
+    // dd-mm-yyyy or dd/mm/yyyy
+    const m = input.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/);
+    if (m) {
+      const [, dd, mm, yyyy] = m;
+      return new Date(`${yyyy}-${mm}-${dd}T00:00:00`);
+    }
+    const d = new Date(input);
+    return isNaN(d.getTime()) ? new Date('1970-01-01') : d;
+  };
+
   // Filter transactions based on date range
   const filteredTransactions = useMemo(() => {
+    const startDate = parseDate(dateRange.start);
+    const endDate = parseDate(dateRange.end);
+    // Make end date inclusive till end-of-day
+    endDate.setHours(23, 59, 59, 999);
+
     return transactions.filter(transaction => {
       const transactionDate = new Date(transaction.transaction_date);
-      const startDate = new Date(dateRange.start);
-      const endDate = new Date(dateRange.end);
-      return transactionDate >= startDate && transactionDate <= endDate;
+      return (
+        !isNaN(transactionDate.getTime()) &&
+        transactionDate >= startDate &&
+        transactionDate <= endDate
+      );
     });
   }, [transactions, dateRange]);
 
@@ -31,11 +54,11 @@ export const FinancialReports = () => {
   const summaryMetrics = useMemo(() => {
     const totalIncome = filteredTransactions
       .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + sanitizeNumericValue(t.amount), 0);
     
     const totalExpenses = filteredTransactions
       .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + sanitizeNumericValue(t.amount), 0);
     
     const netProfit = totalIncome - totalExpenses;
     const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
@@ -53,7 +76,7 @@ export const FinancialReports = () => {
   const chartData = useMemo(() => {
     const monthlyData: { [key: string]: { income: number; expenses: number } } = {};
     
-    filteredTransactions.forEach(transaction => {
+  filteredTransactions.forEach(transaction => {
       const date = new Date(transaction.transaction_date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       
@@ -62,9 +85,9 @@ export const FinancialReports = () => {
       }
       
       if (transaction.type === 'income') {
-        monthlyData[monthKey].income += transaction.amount;
+    monthlyData[monthKey].income += sanitizeNumericValue(transaction.amount);
       } else {
-        monthlyData[monthKey].expenses += transaction.amount;
+    monthlyData[monthKey].expenses += sanitizeNumericValue(transaction.amount);
       }
     });
 

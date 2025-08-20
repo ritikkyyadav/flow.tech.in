@@ -2,11 +2,13 @@
 import { MobileOptimizedLayout } from "@/components/mobile/MobileOptimizedLayout";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { EnhancedFinancialOverviewCards } from "@/components/dashboard/EnhancedFinancialOverviewCards";
-import { FixedIncomeExpenseChart } from "@/components/dashboard/FixedIncomeExpenseChart";
+import AnimatedBackground from "@/components/dashboard/AnimatedBackground";
+import DashboardHero from "@/components/dashboard/DashboardHero";
+import { ModernIncomeExpenseChart } from "@/components/dashboard/ModernIncomeExpenseChart";
 import { FixedCategoryChart } from "@/components/dashboard/FixedCategoryChart";
 import { RecentTransactionsPanel } from "@/components/dashboard/RecentTransactionsPanel";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
-import { AIChatAssistant } from "@/components/AIChatAssistant";
+import PremiumAIChat from "@/components/PremiumAIChat";
 import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { useSubscription } from "@/hooks/useSubscription";
 import { ChartDataService } from "@/services/chartDataService";
@@ -14,9 +16,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MobileButton } from "@/components/mobile/MobileFormComponents";
 import { Crown, Zap, Plus, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TransactionModal } from "@/components/TransactionModal";
+import { MobileDashboardScreen } from "@/components/mobile/MobileDashboardScreen";
 
 const Dashboard = () => {
   const { data, isLoading, refreshData } = useRealTimeData();
@@ -24,6 +28,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  // Optional: allow default type routing in the future
+  const [defaultTxType, setDefaultTxType] = useState<'income' | 'expense'>('expense');
   const [showAIAssistant, setShowAIAssistant] = useState(false);
 
   // Calculate metrics for the enhanced cards
@@ -37,7 +43,8 @@ const Dashboard = () => {
     return ChartDataService.prepareChartData(data || {});
   }, [data]);
 
-  const handleQuickAdd = () => {
+  const handleQuickAdd = (type: 'income' | 'expense' = 'expense') => {
+    setDefaultTxType(type);
     setShowTransactionModal(true);
   };
 
@@ -55,7 +62,22 @@ const Dashboard = () => {
   };
 
   const content = (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="relative space-y-4 sm:space-y-6">
+      <AnimatedBackground />
+      <div className="flex justify-end -mb-2">
+        <Button size="sm" variant="outline" onClick={() => navigate('/dashboard')} className="rounded-full">Try New Dashboard</Button>
+      </div>
+      {/* Hero */}
+      <DashboardHero
+        title="Dashboard"
+        subtitle="Track your finances with AI-powered insights"
+        stats={[
+          { label: 'Total Balance', value: ChartDataService.formatIndianCurrency(metrics.totalBalance) },
+          { label: 'Income (M)', value: ChartDataService.formatIndianCurrency(metrics.monthlyIncome), hint: ChartDataService.formatPercentageChange(metrics.incomeChange) },
+          { label: 'Expenses (M)', value: ChartDataService.formatIndianCurrency(metrics.monthlyExpenses), hint: ChartDataService.formatPercentageChange(metrics.expenseChange) },
+          { label: 'Savings Rate', value: metrics.savingsRate.toFixed(1) + '%' },
+        ]}
+      />
       {/* Subscription Status Banner */}
       {subscription?.plan === 'starter' && (
         <Card className="border-l-4 border-l-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50">
@@ -85,14 +107,14 @@ const Dashboard = () => {
       )}
 
       {/* Financial Overview Cards */}
-      <EnhancedFinancialOverviewCards metrics={metrics} loading={isLoading} />
+  <EnhancedFinancialOverviewCards metrics={metrics} loading={isLoading} />
 
       {/* Quick Actions */}
       <QuickActionsPanel onRefresh={handleRefresh} />
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <FixedIncomeExpenseChart data={chartData.monthlyData} />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+  <ModernIncomeExpenseChart data={chartData.monthlyData} transactions={data?.recentTransactions || []} />
         <FixedCategoryChart data={chartData.categoryData} />
       </div>
 
@@ -158,11 +180,12 @@ const Dashboard = () => {
           isOpen={showTransactionModal}
           onClose={() => setShowTransactionModal(false)}
           onTransactionAdded={handleTransactionSaved}
+          initialData={{ type: defaultTxType }}
         />
       )}
 
       {showAIAssistant && (
-        <AIChatAssistant
+        <PremiumAIChat
           isOpen={showAIAssistant}
           onClose={() => setShowAIAssistant(false)}
         />
@@ -250,7 +273,16 @@ const Dashboard = () => {
           </div>
         }
       >
-        {content}
+        <MobileDashboardScreen 
+          balance={metrics.totalBalance}
+          chartData={chartData.monthlyData}
+          bills={[
+            { id: '1', name: 'Electricity', amount: 1200, dueDate: '18th Aug', iconUrl: '/lovable-uploads/0a001be8-de4d-4b8a-8807-fb97bd857f40.png' },
+            { id: '2', name: 'Internet', amount: 999, dueDate: '20th Aug', iconUrl: '/lovable-uploads/12a1c034-ad16-4af1-b7a1-6c49b595421b.png' },
+            { id: '3', name: 'Water', amount: 450, dueDate: '22nd Aug', iconUrl: '/lovable-uploads/4d4cf201-07fa-4897-98db-09112d4084e5.png' },
+          ]}
+          onSend={handleQuickAdd}
+        />
       </MobileOptimizedLayout>
     );
   }

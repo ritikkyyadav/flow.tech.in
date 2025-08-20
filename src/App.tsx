@@ -11,11 +11,13 @@ import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { TransactionProvider } from "@/contexts/TransactionContext";
 import { BudgetProvider } from "@/contexts/BudgetContext";
 import { AIProvider } from "@/contexts/AIContext";
-import Index from "@/pages/Index";
+import { Index } from "@/pages";
 import Dashboard from "@/pages/Dashboard";
+import DashboardV2 from "@/pages/DashboardV2";
 import Transactions from "@/pages/Transactions";
 import Budget from "@/pages/Budget";
 import Invoices from "@/pages/Invoices";
+import Accounting from "@/pages/Accounting";
 import Reports from "@/pages/Reports";
 import DataManagement from "@/pages/DataManagement";
 import IndianFeatures from "@/pages/IndianFeatures";
@@ -44,7 +46,14 @@ function App() {
                   <AIChatProvider>
                     <Routes>
                       <Route path="/" element={<Index />} />
+                      {/* New default dashboard points to V2 */}
                       <Route path="/dashboard" element={
+                        <ProtectedRoute>
+                          <DashboardV2 />
+                        </ProtectedRoute>
+                      } />
+                      {/* Classic dashboard preserved at /dashboard-classic */}
+                      <Route path="/dashboard-classic" element={
                         <ProtectedRoute>
                           <Dashboard />
                         </ProtectedRoute>
@@ -62,6 +71,11 @@ function App() {
                       <Route path="/invoices" element={
                         <ProtectedRoute>
                           <Invoices />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/accounting" element={
+                        <ProtectedRoute>
+                          <Accounting />
                         </ProtectedRoute>
                       } />
                       <Route path="/reports" element={
